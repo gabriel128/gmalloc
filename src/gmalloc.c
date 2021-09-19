@@ -23,7 +23,6 @@ static void init_metadata(void* arena_init, size_t arena_size) {
 
   /* metadata.arena = arena; */
 
-
   has_been_initialized = true;
 
   pthread_mutex_unlock(&metadata.lock);
