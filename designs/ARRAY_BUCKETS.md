@@ -1,4 +1,8 @@
-# Selected (so far)
+## Global Arena 
+  Discarded for now since this might end up with internal Arena 
+  fragmentation, assuming that the distrubution per bucket
+  is going to be different 
+
 
 - Each arena will have a group of power of 2 buckets
 - It will always try to allocate at the end until it runs out of space, then it
@@ -10,13 +14,17 @@
  
 - Each thread will have its own arena and shared memory will be handled
   on special arenas.
-- 
  
-## How each arena will be split
+### How each arena will be split
 
 - 4 mb Arena
 
-4mb = 1000 * kb pages
+4mb = 1000 * 4kb pages
 4mb = 8b * 20000 + 16b * 20000 + 32b*20000  + 64b * 9000 + 256b * 3000 + 512b * 3000
 
 (The distrubution is somewhat arbitrary atm until I find some evidence on what to use)
+
+###  Memory layout
+
+||              8b                    |  16b              
+            |   32b                 |     ....     |   512b     ||

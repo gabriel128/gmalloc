@@ -1,10 +1,7 @@
-# blah: main.c
-#		$(CC) main.c -o cquel -Wall -Wextra -pedantic
-
 TARGET = ./bin/gmalloc
 LIBS = -lm
 CC = clang
-CFLAGS = -g -Wall -Wextra -pedantic # -fsanitize=undefined
+CFLAGS = -g -Wall -Wextra -pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-format-pedantic# -fsanitize=undefined
 
 .PHONY: default all clean
 
@@ -15,6 +12,8 @@ all: default
 SOURCES=$(wildcard src/**/*.c src/*.c)
 OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
 HEADERS=$(wildcard src/**/*.h src/*.h)
+TEST_SOURCES=$(wildcard tests/**/*.c tests/*.c)
+TEST_OBJECTS=$(patsubst %.c,%.o,$(TEST_SOURCES))
 
 %.o: %.c $(HEADERS)
 		$(CC) $(CFLAGS) -c $< -o $@
@@ -34,3 +33,7 @@ clean:
 check:
 		@echo Files with potentially dangerous functions.
 		@egrep '[^_.>a-zA-Z0-9](str(n?cpy|n?cat|xfrm|n?dup|str|pbrk
+
+run:
+	make
+	./bin/gmalloc

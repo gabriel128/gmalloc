@@ -1,41 +1,30 @@
 #include "gmalloc.h"
 
-
-/*
-  8 bytes
-  free bucket -> |  0  |   |   |   |   |   |
-  16 bytes
-  |  0  |   |   |   |   |   |
-  32 bytes
-  |  0  |   |   |   |   |   |
-  64 bytes
-  |  0  |   |   |   |   |   |
-  128 bytes
-  |  0  |   |   |   |   |   |
-  256 bytes
-  |  0  |   |   |   |   |   |
-  512 bytes
-  |  0  |   |   |   |   |   |
-*/
-
 // TODO: Add more metadata for avoiding lock contention
-AllocMetadata metadata;
+GMAllocMetadata metadata;
+
 bool has_been_initialized = false;
 
-static void init_metadata(void* arena_int, void* free_page, size_t arena_size) {
+static void init_metadata(void* arena_init, size_t arena_size) {
   pthread_mutex_init(&metadata.lock, NULL);
   pthread_mutex_lock(&metadata.lock);
 
-  metadata.arena_init = arena_int;
-  metadata.alloc_head = arena_int;
-  metadata.free_node_head = free_page;
+  metadata.arena_init = arena_init;
   metadata.arena_size = arena_size;
 
-  has_been_initialized = true;
+  /* Arena arena = { */
+    /* .init_8 = arena_init, */
+    /* .init_16 = (uint8_t*)arena_init + 20000 */
+  /* }; */
 
-  // Init Free headers linked list
-  FreeNode free_node_header = {UINT_MAX, NULL, NULL, metadata.arena_init};
-  *metadata.free_node_head = free_node_header;
+  /* ArenaMetadata arena_metadata = { */
+  /*   .meta_8 = {.last_index = 0, .used_slots = {0} } */
+  /* }; */
+
+  /* metadata.arena = arena; */
+
+
+  has_been_initialized = true;
 
   pthread_mutex_unlock(&metadata.lock);
 }
@@ -43,62 +32,23 @@ static void init_metadata(void* arena_int, void* free_page, size_t arena_size) {
 void gmalloc_init(int pages) {
   int fd = open("/dev/zero", O_RDWR);
 
-  int page_size = getpagesize();
+  int page_size = 4096;
 
   // Init arena
   void* arena_init = mmap(NULL, page_size*pages, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-  // Creates 1 page for Free data structure
-  void* free_page = mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 
-  if (arena_init == MAP_FAILED || free_page == MAP_FAILED) {
+  if (arena_init == MAP_FAILED) {
     perror("Error on mmap");
     exit(1);
   }
   close(fd);
 
-  init_metadata(arena_init, free_page, page_size*pages);
+  init_metadata(arena_init, page_size*pages);
 }
 
-/* void* create_free_page() { */
-/*   int fd = open("/dev/zero", O_RDWR); */
-/*   int page_size = getpagesize(); */
-
-/*   void *ptr = mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0); */
-
-/*   if (ptr == MAP_FAILED) { */
-/*     perror("Error on mmap"); */
-/*     exit(1); */
-/*   } */
-/*   close(fd); */
-/*   return ptr; */
-/* } */
-
-
-static FreeNode* find_free_node(uint32_t size) {
-  FreeNode* node = metadata.free_node_head;
-
-  while(true)  {
-    if (size < node->size) {
-      break;
-    } else if () {
-
-    }
-
-  }
-
+static void* find_free_space(uint32_t size) {
   perror("Not Implemented yet");
-  return node;
-}
-
-// Make a Free Node not free anyumore
-// The head of the 
-static void defree(FreeNode* free_node, uint32_t size) {
-  if (free_node_is_head(free_node, metadata)) {
-    free_node->size = size;
-    free_node->free_mem_region = free_node->free_mem_region + sizeof(AllocatedHeader) + size;
-  } else {
-    perror("Not Implemented yet");
-  }
+  return NULL;
 }
 
 // TODO
@@ -110,33 +60,37 @@ void* gmalloc(size_t size) {
         return NULL;
     }
 
-    if (has_been_initialized == false) {
-      gmalloc_init(1000);
-      printf("Arena init is in %p \n", metadata.arena_init);
-    }
+    printf("Arena size is %zd\n", sizeof(Arena));
+    printf("GmallocMetadata size is %zd \n", sizeof(GMAllocMetadata));
 
-    FreeNode* free_node = find_free_node(size);
+    /* if (has_been_initialized == false) { */
+    /*   gmalloc_init(1000); */
+    /*   printf("Arena init is in %p \n", metadata.arena_init); */
+    /* } */
 
-    if (free_node == NULL) {
+    /* FreeNode* free_node = find_free_node(size); */
 
-    }
+    /* if (free_node == NULL) { */
 
-    AllocatedHeader* new_header = (AllocatedHeader*)free_node->free_mem_region;
+    /* } */
 
-    AllocatedHeader header = {size, MAGIC};
-    *new_header = header;
+    /* AllocatedHeader* new_header = (AllocatedHeader*)free_node->free_mem_region; */
 
-    // DEBUG
-    size_t offset = sizeof(header) + size;
-    printf("Size of header is %zu plus mem is %zu \n", sizeof(header), offset);
+    /* AllocatedHeader header = {size, MAGIC}; */
+    /* *new_header = header; */
 
-    defree(free_node, size);
+    /* // DEBUG */
+    /* size_t offset = sizeof(header) + size; */
+    /* printf("Size of header is %zu plus mem is %zu \n", sizeof(header), offset); */
 
-    /* metadata.free_node_head = (GeneralFreeHeader*)((char*)old_head + offset); */
+    /* defree(free_node, size); */
 
-    printf("New free head is in %p \n", metadata.free_node_head);
+    /* /\* metadata.free_node_head = (GeneralFreeHeader*)((char*)old_head + offset); *\/ */
 
-    return (new_header+1);
+    /* printf("New free head is in %p \n", metadata.free_node_head); */
+
+    /* return (new_header+1); */
+    return NULL;
 }
 
 /* int gfree(void *ptr) { */
