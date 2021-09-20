@@ -44,7 +44,7 @@ typedef struct Result {
   ResultKind kind;
   union {
     uint64_t val;
-    char *err;
+    char* err;
   } the;
 } Result;
 

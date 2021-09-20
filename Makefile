@@ -90,3 +90,6 @@ init:
 	mkdir -p build
 	mkdir -p tests
 	mkdir -p tests/bin
+
+format:
+	find src -iname *.h -o -iname *.c | xargs clang-format -i

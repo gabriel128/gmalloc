@@ -5,7 +5,7 @@ GMAllocMetadata metadata;
 
 bool has_been_initialized = false;
 
-static void init_metadata(void *arena_init, size_t arena_size) {
+static void init_metadata(void* arena_init, size_t arena_size) {
   pthread_mutex_init(&metadata.lock, NULL);
   pthread_mutex_lock(&metadata.lock);
 
@@ -34,7 +34,7 @@ void gmalloc_init(int pages) {
   int page_size = 4096;
 
   // Init arena
-  void *arena_init =
+  void* arena_init =
       mmap(NULL, page_size * pages, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 
   if (arena_init == MAP_FAILED) {
@@ -46,7 +46,7 @@ void gmalloc_init(int pages) {
   init_metadata(arena_init, page_size * pages);
 }
 
-static void *find_free_space(uint32_t size) {
+static void* find_free_space(uint32_t size) {
   perror("Not Implemented yet");
   return NULL;
 }
@@ -55,7 +55,7 @@ static void *find_free_space(uint32_t size) {
 // - Check if there is enough space
 // - Make it thread safe
 // - Return multiple of 8 bytes addresses for alignment
-void *gmalloc(size_t size) {
+void* gmalloc(size_t size) {
   if (size == 0) {
     return NULL;
   }
