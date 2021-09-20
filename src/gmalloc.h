@@ -31,4 +31,3 @@ typedef struct GMallocMetadata {
   void *arena_init;
   Arena arena;
 } GMAllocMetadata;
-

@@ -1,41 +1,66 @@
-CFLAGS=-O2 -Wall -Wextra -fpic -shared $(OPTFLAGS)
-PREFIX?=/usr/local
-SOURCES=$(wildcard src/**/*.c src/*.c)
-OBJECTS=$(patsubst %.c,%.o,$(SOURCES))
-TEST_SRC=$(wildcard tests/*_tests.c)
-TESTS=$(patsubst %.c,%,$(TEST_SRC))
-TARGET=bin/gmalloc
-HEADERS=$(wildcard src/**/*.h src/*.h)
-# SO_TARGET=$(patsubst %.a,%.so,$(TARGET))
 CC = clang
+# ANSI Colors
 
-.PHONY: default all clean tests
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
-default: $(TARGET)
+# DEV compiling flags
+CFLAGS=-g -Wall -Wextra -pedantic -Wno-unused-parameter \
+	-Wno-unused-variable -Wno-unused-function -Wno-format-pedantic $(OPTFLAGS)
 
-dev: CFLAGS=-g -Wall -DDEBUG -Wextra -pedantic -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-format-pedantic $(OPTFLAGS)
-dev: all
+SOURCES=$(wildcard src/**/*.c src/*.c)
+OBJECTS=$(patsubst src/%.c,build/%.o,$(SOURCES))
+HEADERS=$(wildcard src/**/*.h src/*.h)
 
-all: default
+TARGET=lib/libgmalloc.a
+SO_TARGET=$(patsubst %.a,%.so,$(TARGET))
 
-%.o: %.c $(HEADERS)
+# TESTS
+TEST_DIR=tests
+TEST_SRC=$(wildcard $(TEST_DIR)/*_tests.c)
+TESTBINS=$(patsubst $(TEST_DIR)/%.c,$(TEST_DIR)/bin/%,$(TEST_SRC))
+
+###
+
+.PHONY: all clean tests release
+
+all: $(TARGET) $(SO_TARGET)
+
+build/%.o: src/%.c $(HEADERS)
 		$(CC) $(CFLAGS) -c $< -o $@
 
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
+# For binaries
+# $(TARGET): $(OBJECTS) $(HEADERS)
+# 		$(CC) $(OBJECTS) $(CFLAGS) $(LIBS) -o $@
+
+$(TARGET): CFLAGS += -fPIC
 $(TARGET): $(OBJECTS) $(HEADERS)
-		$(CC) $(OBJECTS) $(CFLAGS) $(LIBS) -o $@
+	ar rcs $@ $(OBJECTS)
 
-# Run
-run: dev
-	./bin/gmalloc
+$(SO_TARGET): $(TARGET) $(OBJECTS)
+		$(CC) -shared -o $@ $(OBJECTS)
 
-watch: run
-	./auto_runner.sh
+# Release build
+
+release: CFLAGS=-DNDEBUG -O2 -Wall -Wextra $(OPTFLAGS)
+release: clean
+release: $(TARGET)
+
+
+watch-tests: test
+	@echo -e "${GREEN}** Running Test Watch **${NC}"
+	while true; do \
+	echo " "; \
+	echo " ================================= "; \
+	echo " "; \
+	make --no-print-directory test; \
+	inotifywait ./src/* -q -e modify; \
+	done
 
 clean:
-		rm -rf build $(OBJECTS) $(TESTS)
-		rm -rf bin/*
+		rm -rf build/* bin/* $(OBJECTS) $(TEST_DIR)/bin/* lib/*
 		find . -name "*.gc*" -exec rm {} \;
 		rm -rf `find . -name "*.dSYM" -print`
 
@@ -43,3 +68,25 @@ clean:
 check:
 		@echo Files with potentially dangerous functions.
 		@egrep '[^_.>a-zA-Z0-9](str(n?cpy|n?cat|xfrm|n?dup|str|pbrk|tok|_)|stpn?cpy|a?sn?printf|byte_)' $(SOURCES) || true
+
+$(TEST_DIR)/bin/%: $(TEST_DIR)/%.c $(OBJECTS) $(HEADERS)
+	$(CC) $(CFLAGS) $< $(OBJECTS) -o $@ -lcriterion $(TARGET)
+
+test: $(TARGET) $(TEST_DIR)/bin $(TESTBINS) $(HEADERS)
+	for test in $(TESTBINS); do ./$$test ; done
+
+## Example
+example: bin/example
+
+bin/example: $(TARGET)
+	$(CC) $(CFLAGS) examples/main.c -o $@ $(TARGET)
+	./bin/example
+
+## INIT Project structure
+init:
+	mkdir -p src
+	mkdir -p bin
+	mkdir -p lib
+	mkdir -p build
+	mkdir -p tests
+	mkdir -p tests/bin

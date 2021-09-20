@@ -54,3 +54,6 @@ dkms.conf
 *.tmp
 
 .ccls-cache/*
+
+build/*
+bin/*
