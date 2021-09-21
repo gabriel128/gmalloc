@@ -1,7 +1,7 @@
 #include "gmalloc.h"
 
 // TODO: Add more metadata for avoiding lock contention
-GMAllocMetadata metadata;
+thread_local GMAllocMetadata metadata;
 
 bool has_been_initialized = false;
 
