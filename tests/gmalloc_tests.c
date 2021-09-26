@@ -79,14 +79,22 @@ Test(gmalloc_tests, eight_byte_bucket_malloc_and_free) {
 
 Test(gmalloc_tests, alloc_and_free_multiple1) {
     test_multiple_allocations(1, 8);
+
+
 }
 
 Test(gmalloc_tests, alloc_and_free_multiple4) {
+    GMAllocMetadata *metadata = gmalloc_metadata();
     test_multiple_allocations(4, 8);
+    printf("%p \n", metadata->arenas[0].arena_start_ptr);
+    cr_assert(metadata->arenas_created[0]);
+    cr_assert_eq(metadata->arenas_created[1], false);
 }
 
 Test(gmalloc_tests, alloc_and_free_multiple8) {
+    GMAllocMetadata *metadata = gmalloc_metadata();
     test_multiple_allocations(8, 8);
+    printf("%p \n", metadata->arenas[0].arena_start_ptr);
 }
 
 Test(gmalloc_tests, alloc_and_free_multiple16) {

@@ -35,7 +35,8 @@ static Arena create_arena(uint16_t bucket_size) {
 
   Arena arena = {
       .header = arena_header,
-      .free_stack = FreeStack_new(),
+      // TODO assing FreeStack pages accordingly
+      .free_stack = FreeStack_new(1),
       .arena_start_ptr = mem_ptr,
       .tail = mem_ptr
   };
@@ -54,8 +55,8 @@ static char* find_free_space(Arena* arena) {
   FreeStack* free_stack = arena->free_stack;
 
   if (free_stack->len > 0) {
-    UIntResult index = FreeStack_pop(free_stack);
-    char* ptr = arena->arena_start_ptr + (index.the.val * header->bucket_size);
+    PtrResult index = FreeStack_pop(free_stack);
+    char* ptr = (char*)index.the.val;
 
     log_debug("[gmalloc] using free_stack %p \n", ptr);
     return ptr;
@@ -114,7 +115,7 @@ void* gmalloc(size_t size) {
 
   size_t bucket_index = find_bucket_index(size);
 
-  if (bucket_index == -1) {
+  if (bucket_index == (size_t)-1) {
     log_error("Size %zu not handled yet \n", size);
     return NULL;
   }
@@ -159,17 +160,17 @@ int gfree(void* ptr) {
 
   ArenaHeader header = arena.header;
 
-  size_t index = ((char*) ptr - arena.arena_start_ptr) / header.bucket_size ;
-  FreeStack_push(arena.free_stack, index);
+  /* size_t index = ((char*) ptr - arena.arena_start_ptr) / header.bucket_size ; */
+  FreeStack_push(arena.free_stack, (Byte*)ptr);
 
   // TODO
   /* if(header.len == header.capacity && FreeStack_empty(arena.free_stack)) { */
-  /*   destroy arena
+  /*   destroy arena */
   /* } */
 
   return 1;
 }
 
-GMAllocMetadata get_metadata() {
-  return metadata;
+GMAllocMetadata* gmalloc_metadata() {
+  return &metadata;
 }

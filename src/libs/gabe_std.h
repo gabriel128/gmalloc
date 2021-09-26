@@ -35,8 +35,8 @@
   fprintf(stderr, ANSI_COLOR_GREEN "[INFO] (%s:%d) " M ANSI_COLOR_RESET "\n",  \
           __FILE__, __LINE__, ##__VA_ARGS__)
 
-// Result
-// TODO: Make it IntResult
+// Better semantics for byte
+typedef unsigned char Byte;
 
 typedef enum { RESULT_OK, RESULT_ERR } ResultKind;
 
@@ -58,6 +58,15 @@ typedef struct IntResult {
   } the;
 } IntResult;
 
+typedef struct PtrResult {
+  ResultKind kind;
+
+  union {
+    Byte* val;
+    char* err;
+  } the;
+} PtrResult;
+
 
 #define IS_OK(result) ((result).kind == RESULT_OK)
 #define IS_ERR(result) ((result).kind == RESULT_ERR)
@@ -67,3 +76,7 @@ typedef struct IntResult {
 
 #define INT_OK(value) ((IntResult){RESULT_OK, {.val = value}})
 #define INT_ERR(error) ((IntResult){RESULT_ERR, {.err = error}})
+
+#define PTR_OK(value) ((PtrResult){RESULT_OK, {.val = value}})
+#define PTR_ERR(error) ((PtrResult){RESULT_ERR, {.err = error}})
+
