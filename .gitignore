@@ -57,3 +57,4 @@ dkms.conf
 
 build/*
 bin/*
+tests/bin/*
