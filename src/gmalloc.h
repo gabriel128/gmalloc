@@ -12,22 +12,23 @@ void gdump();
 
 typedef struct ArenaHeader {
   uint16_t bucket_size;
-  size_t size_bytes;
+  size_t size_in_bytes;
   size_t capacity;
   size_t len;
-  // Points to the next available slot
-  size_t cursor;
 } ArenaHeader;
 
 typedef struct Arena {
   ArenaHeader header;
   FreeStack* free_stack;
-  void* arena_start_ptr;
+  char* arena_start_ptr;
+  // Points to the next available slot
+  char* tail;
 } Arena;
 
 typedef struct GMallocMetadata {
-  pthread_mutex_t lock;
-  size_t arena_size;
-  void* arena_init;
-  Arena arena;
+  /* pthread_mutex_t lock; */
+  /* size_t arena_size; */
+  /* void* arena_init; */
+  Arena arenas[1];
+  bool arenas_created[1];
 } GMAllocMetadata;

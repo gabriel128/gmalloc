@@ -56,7 +56,7 @@ watch-tests: test
 	echo " ================================= "; \
 	echo " "; \
 	make --no-print-directory test; \
-	inotifywait ./src/* -q -e modify; \
+	inotifywait ./* -q -e modify; \
 	done
 
 clean:

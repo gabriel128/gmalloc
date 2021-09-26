@@ -3,7 +3,7 @@
 #include "../src/free_stack.h"
 
 Test(free_stack_tests, test_basic_run) {
-    Result res = FreeStack_pop(NULL);
+    UIntResult res = FreeStack_pop(NULL);
     cr_expect(IS_ERR(res));
 
     FreeStack* stack = FreeStack_new();
@@ -23,7 +23,7 @@ Test(free_stack_tests, test_basic_run) {
     FreeStack_push(stack, 2);
     FreeStack_push(stack, 3);
 
-    Result val_res = FreeStack_pop(stack);
+    UIntResult val_res = FreeStack_pop(stack);
     cr_expect(IS_OK(val_res));
     cr_expect(val_res.the.val == 3);
 

@@ -14,4 +14,4 @@ typedef struct FreeStack {
 FreeStack* FreeStack_new();
 bool FreeStack_destroy(FreeStack* stack);
 bool FreeStack_push(FreeStack* stack, uint16_t slot_index);
-Result FreeStack_pop(FreeStack* stack);
+UIntResult FreeStack_pop(FreeStack* stack);

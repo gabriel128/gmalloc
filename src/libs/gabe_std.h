@@ -40,15 +40,30 @@
 
 typedef enum { RESULT_OK, RESULT_ERR } ResultKind;
 
-typedef struct Result {
+typedef struct UIntResult {
   ResultKind kind;
+
   union {
     uint64_t val;
     char* err;
   } the;
-} Result;
+} UIntResult;
 
-#define OK(value) ((Result){RESULT_OK, {.val = value}})
-#define ERR(error) ((Result){RESULT_ERR, {.err = error}})
+typedef struct IntResult {
+  ResultKind kind;
+
+  union {
+    int64_t val;
+    char* err;
+  } the;
+} IntResult;
+
+
 #define IS_OK(result) ((result).kind == RESULT_OK)
 #define IS_ERR(result) ((result).kind == RESULT_ERR)
+
+#define UINT_OK(value) ((UIntResult){RESULT_OK, {.val = value}})
+#define UINT_ERR(error) ((UIntResult){RESULT_ERR, {.err = error}})
+
+#define INT_OK(value) ((IntResult){RESULT_OK, {.val = value}})
+#define INT_ERR(error) ((IntResult){RESULT_ERR, {.err = error}})

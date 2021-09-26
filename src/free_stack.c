@@ -57,18 +57,18 @@ bool FreeStack_push(FreeStack* stack, uint16_t slot_index) {
   return true;
 }
 
-Result FreeStack_pop(FreeStack* stack) {
+UIntResult FreeStack_pop(FreeStack* stack) {
   if (stack == NULL) {
-    return ERR("Null stack");
+    return UINT_ERR("Null stack");
   }
 
   if (stack->len == 0) {
-    return ERR("Empty stack");
+    return UINT_ERR("Empty stack");
   }
 
   stack->cursor--;
   stack->len--;
   uint16_t val = stack->list[stack->cursor];
 
-  return OK(val);
+  return UINT_OK(val);
 }

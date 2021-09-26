@@ -1,6 +1,7 @@
 # Arena buckets
 
-- >512b allocations will be handled as a special case
+- greater than 512b allocations will be handled as a special case
+  probably just calling malloc as a fallback
 
 ### How each arena will be split
 
@@ -31,6 +32,6 @@ Each bucket arena will be split evenly by bucket sizes
 
 ## Nice to have
  
-- Each thread will have its own set of arenas. This should reduce cache 
+- Each thread will have its own set of arenas to reduce cache 
   false sharing and lock contention
  

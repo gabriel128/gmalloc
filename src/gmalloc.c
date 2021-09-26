@@ -1,37 +1,13 @@
 #include "gmalloc.h"
 
-// TODO: Add more metadata for avoiding lock contention
 thread_local GMAllocMetadata metadata;
 
 bool has_been_initialized = false;
 
-static void init_metadata(void* arena_init, size_t arena_size) {
-  pthread_mutex_init(&metadata.lock, NULL);
-  pthread_mutex_lock(&metadata.lock);
-
-  metadata.arena_init = arena_init;
-  metadata.arena_size = arena_size;
-
-  /* Arena arena = { */
-  /* .init_8 = arena_init, */
-  /* .init_16 = (uint8_t*)arena_init + 20000 */
-  /* }; */
-
-  /* ArenaMetadata arena_metadata = { */
-  /*   .meta_8 = {.last_index = 0, .used_slots = {0} } */
-  /* }; */
-
-  /* metadata.arena = arena; */
-
-  has_been_initialized = true;
-
-  pthread_mutex_unlock(&metadata.lock);
-}
-
-void gmalloc_init(int pages) {
+void* mem_init(int pages) {
   int fd = open("/dev/zero", O_RDWR);
 
-  int page_size = 4096;
+  int page_size = PAGE_SIZE;
 
   // Init arena
   void* arena_init =
@@ -43,61 +19,120 @@ void gmalloc_init(int pages) {
   }
   close(fd);
 
-  init_metadata(arena_init, page_size * pages);
+  return arena_init;
 }
 
-static void* find_free_space(uint32_t size) {
-  perror("Not Implemented yet");
-  return NULL;
+static Arena create_arena(uint16_t bucket_size) {
+  uint32_t pages = 1;
+  void* mem_ptr = mem_init(pages);
+
+  ArenaHeader arena_header = {
+     .bucket_size = bucket_size,
+     .size_in_bytes = PAGE_SIZE  * pages,
+     .capacity = PAGE_SIZE * pages / bucket_size,
+     .len = 0
+  };
+
+  Arena arena = {
+      .header = arena_header,
+      .free_stack = FreeStack_new(),
+      .arena_start_ptr = mem_ptr,
+      .tail = mem_ptr
+  };
+
+  return arena;
 }
 
-// TODO
-// - Check if there is enough space
-// - Make it thread safe
-// - Return multiple of 8 bytes addresses for alignment
-void* gmalloc(size_t size) {
-  if (size == 0) {
+static bool destroy_arena(Arena arena) {
+  return false;
+}
+
+// TODO: Make this a Result/Option?
+static char* find_free_space(Arena* arena) {
+  ArenaHeader* header = &arena->header;
+  FreeStack* free_stack = arena->free_stack;
+
+  if (free_stack->len > 0) {
+    UIntResult index = FreeStack_pop(free_stack);
+    char* ptr = arena->arena_start_ptr + (index.the.val * header->bucket_size);
+
+    log_debug("[gmalloc] using free_stack %p \n", ptr);
+    return ptr;
+  }
+
+  if (header->len >= header->capacity) {
     return NULL;
   }
 
-  printf("Arena size is %zd\n", sizeof(Arena));
-  printf("GmallocMetadata size is %zd \n", sizeof(GMAllocMetadata));
+  char* old_tail = arena->tail;
+  char* next_tail = arena->tail + header->bucket_size;
+  arena->tail = next_tail;
 
-  /* if (has_been_initialized == false) { */
-  /*   gmalloc_init(1000); */
-  /*   printf("Arena init is in %p \n", metadata.arena_init); */
-  /* } */
+  log_debug("[gmalloc] using tail, old_tail was %p, new tail is %p \n", old_tail, next_tail);
 
-  /* FreeNode* free_node = find_free_node(size); */
-
-  /* if (free_node == NULL) { */
-
-  /* } */
-
-  /* AllocatedHeader* new_header = (AllocatedHeader*)free_node->free_mem_region;
-   */
-
-  /* AllocatedHeader header = {size, MAGIC}; */
-  /* *new_header = header; */
-
-  /* // DEBUG */
-  /* size_t offset = sizeof(header) + size; */
-  /* printf("Size of header is %zu plus mem is %zu \n", sizeof(header), offset);
-   */
-
-  /* defree(free_node, size); */
-
-  /* /\* metadata.free_node_head = (GeneralFreeHeader*)((char*)old_head +
-   * offset); *\/ */
-
-  /* printf("New free head is in %p \n", metadata.free_node_head); */
-
-  /* return (new_header+1); */
-  return NULL;
+  return old_tail;
 }
 
-/* int gfree(void *ptr) { */
-/*     return -1; */
-/* } */
+void* gmalloc(size_t size) {
+  log_debug("[gmalloc] for size %zu\n", size);
 
-void gdump() { fprintf(stdout, "Arena init is %p\n", metadata.arena_init); }
+  if (size == 0) {
+    return NULL;
+  }
+  /* log_debug("Arena struct size is %zd\n", sizeof(Arena)); */
+  /* log_debug("GmallocMetadata struct size is %zd \n", sizeof(GMAllocMetadata)); */
+
+  if (size > 8) {
+    log_error("Size %zu not handled yet \n", size);
+    return NULL;
+  }
+
+  if (!metadata.arenas_created[0]) {
+    metadata.arenas[0] = create_arena(8);
+    metadata.arenas_created[0] = true;
+  }
+
+  Arena* arena = &metadata.arenas[0];
+
+  char* free_space = find_free_space(arena);
+
+  if (free_space == NULL) {
+    log_error("Arena Ran out of free space");
+    return NULL;
+  } else {
+    assert((uintptr_t)free_space % 8 == 0);
+    return (void*)free_space;
+  }
+}
+
+int gfree(void* ptr) {
+  log_debug("[gfree] ptr %p\n", ptr);
+
+  size_t arenas_length = sizeof(metadata.arenas) / sizeof(metadata.arenas[0]);
+
+  Arena arena;
+  bool found = false;
+
+  for (size_t i = 0; i < arenas_length; i++) {
+    arena = metadata.arenas[i];
+
+    if ((char*)ptr >= arena.arena_start_ptr && (char*)ptr < arena.tail)   {
+       found = true;
+       break;
+    }
+  }
+
+  if(!found)
+    return -1;
+
+  ArenaHeader header = arena.header;
+
+  size_t index = ((char*) ptr - arena.arena_start_ptr) / header.bucket_size ;
+  FreeStack_push(arena.free_stack, index);
+
+  return 1;
+}
+
+GMAllocMetadata get_metadata() {
+  return metadata;
+}
