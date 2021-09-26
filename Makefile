@@ -72,6 +72,7 @@ check:
 $(TEST_DIR)/bin/%: $(TEST_DIR)/%.c $(OBJECTS) $(HEADERS)
 	$(CC) $(CFLAGS) $< $(OBJECTS) -o $@ -lcriterion $(TARGET)
 
+# test: CFLAGS=-DNDEBUG
 test: $(TARGET) $(TEST_DIR)/bin $(TESTBINS) $(HEADERS)
 	for test in $(TESTBINS); do ./$$test ; done
 

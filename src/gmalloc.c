@@ -43,6 +43,7 @@ static Arena create_arena(uint16_t bucket_size) {
   return arena;
 }
 
+// TODO
 static bool destroy_arena(Arena arena) {
   return false;
 }
@@ -61,16 +62,47 @@ static char* find_free_space(Arena* arena) {
   }
 
   if (header->len >= header->capacity) {
+    // TODO create a new arena
     return NULL;
   }
 
   char* old_tail = arena->tail;
   char* next_tail = arena->tail + header->bucket_size;
   arena->tail = next_tail;
+  header->len++;
 
   log_debug("[gmalloc] using tail, old_tail was %p, new tail is %p \n", old_tail, next_tail);
 
   return old_tail;
+}
+
+size_t find_bucket_index(size_t size) {
+  if (0 < size && size <= 8)
+    return 0;
+
+  if (8 < size && size <= 16)
+    return 1;
+
+  if (16 < size && size <= 32)
+    return 2;
+
+  if (32 < size && size <= 64)
+    return 3;
+
+  if (64 < size && size <= 128)
+    return 4;
+
+  if (128 < size && size <= 256)
+    return 5;
+
+  if (256 < size && size <= 512)
+    return 6;
+
+  return -1;
+}
+
+size_t bucket_size_from_index(size_t index) {
+  return 1<<(index+3);
 }
 
 void* gmalloc(size_t size) {
@@ -79,20 +111,20 @@ void* gmalloc(size_t size) {
   if (size == 0) {
     return NULL;
   }
-  /* log_debug("Arena struct size is %zd\n", sizeof(Arena)); */
-  /* log_debug("GmallocMetadata struct size is %zd \n", sizeof(GMAllocMetadata)); */
 
-  if (size > 8) {
+  size_t bucket_index = find_bucket_index(size);
+
+  if (bucket_index == -1) {
     log_error("Size %zu not handled yet \n", size);
     return NULL;
   }
 
-  if (!metadata.arenas_created[0]) {
-    metadata.arenas[0] = create_arena(8);
-    metadata.arenas_created[0] = true;
+  if (!metadata.arenas_created[bucket_index]) {
+    metadata.arenas[bucket_index] = create_arena(bucket_size_from_index(bucket_index));
+    metadata.arenas_created[bucket_index] = true;
   }
 
-  Arena* arena = &metadata.arenas[0];
+  Arena* arena = &metadata.arenas[bucket_index];
 
   char* free_space = find_free_space(arena);
 
@@ -129,6 +161,11 @@ int gfree(void* ptr) {
 
   size_t index = ((char*) ptr - arena.arena_start_ptr) / header.bucket_size ;
   FreeStack_push(arena.free_stack, index);
+
+  // TODO
+  /* if(header.len == header.capacity && FreeStack_empty(arena.free_stack)) { */
+  /*   destroy arena
+  /* } */
 
   return 1;
 }

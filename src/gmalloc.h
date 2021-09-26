@@ -26,9 +26,6 @@ typedef struct Arena {
 } Arena;
 
 typedef struct GMallocMetadata {
-  /* pthread_mutex_t lock; */
-  /* size_t arena_size; */
-  /* void* arena_init; */
-  Arena arenas[1];
-  bool arenas_created[1];
+  Arena arenas[7];
+  bool arenas_created[7];
 } GMAllocMetadata;
