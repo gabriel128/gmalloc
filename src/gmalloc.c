@@ -160,7 +160,6 @@ int gfree(void* ptr) {
 
   ArenaHeader header = arena.header;
 
-  /* size_t index = ((char*) ptr - arena.arena_start_ptr) / header.bucket_size ; */
   FreeStack_push(arena.free_stack, (Byte*)ptr);
 
   // TODO
