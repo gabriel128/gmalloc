@@ -13,8 +13,8 @@ Test(free_stack_tests, test_basic_run) {
 
     cr_assert_eq(stack->cursor, 0);
     cr_assert_eq(stack->len, 0);
-    printf("%zu \n", stack->capacity);
-    cr_assert_eq(stack->capacity, 507);
+    /* printf("%zu\n", stack->capacity); */
+    cr_assert_eq(stack->capacity, 508);
 
     int address1 = 1;
     int address2 = 2;

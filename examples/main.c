@@ -1,23 +1,49 @@
 #include "../src/gmalloc.h"
+#include <sys/resource.h>
+
+long get_mem_usage() {
+    struct rusage usage;
+
+    getrusage(RUSAGE_SELF, &usage);
+
+    return usage.ru_maxrss;
+}
+void get_mem(int* currVirtMem) {
+
+    // stores each word in status file
+    char buffer[1024] = "";
+
+    // linux file contains this-process info
+    FILE* file = fopen("/proc/self/status", "r");
+
+    // read the entire file
+    while (fscanf(file, " %1023s", buffer) == 1) {
+
+        if (strcmp(buffer, "VmPeak:") == 0) {
+            fscanf(file, " %d", currVirtMem);
+        }
+    }
+    fclose(file);
+}
+
+
 int main() {
-    /* int* a = gmalloc(sizeof(int)); */
-    /* *a = 2; */
+    /* int init_mem; */
+    /* get_mem(&init_mem); */
+    long init_mem = get_mem_usage();
 
-    /* printf("A is in %p with %d\n", a, *a); */
+    int* x = gmalloc(4);
+    /* memset(x, 1, 8); */
+    *x = 0xFFFFFFFF;
+    gfree(x);
 
-    /* gfree(a); */
+    /* int after_free_mem; */
+    /* get_mem(&after_free_mem); */
 
-    /* int* b = gmalloc(sizeof(int)); */
-    /* *b = 2; */
-    /* printf("B is in %p with %d\n", b, *b); */
-    /* gfree(b); */
-    /* gfree(b); */
+    long after_free_mem = get_mem_usage();
+    printf("Mem usage: %ld %ld\n", after_free_mem, init_mem);
 
-    /* for(int i = 0; i < 8; i++) { */
-    /*     printf("%d \n", i); */
-    /*     int* a = gmalloc(512); */
-    /*     *a = 3; */
-    /* } */
+    /* while(1); */
 
     return 0;
 }

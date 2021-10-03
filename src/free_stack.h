@@ -13,8 +13,8 @@ typedef struct FreeStack {
   size_t cursor;
   size_t capacity;
   size_t len;
-  // Hols up to ~512 per page (i.e. Page - header)
-  Byte** list;
+  // Hols up to ~512 per page (i.e. Page - metadata)
+  Byte* list[];
 } FreeStack;
 
 FreeStack* FreeStack_new(size_t size);

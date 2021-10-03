@@ -6,22 +6,22 @@
 #define PAGE_SIZE 4096
 
 typedef struct ArenaHeader {
-  uint16_t bucket_size;
   size_t size_in_bytes;
   size_t capacity;
   size_t len;
+  uint16_t bucket_size;
+  FreeStack* free_stack;
 } ArenaHeader;
 
 typedef struct Arena {
-  ArenaHeader header;
-  FreeStack* free_stack;
-  char* arena_start_ptr;
+  ArenaHeader* header;
+  /* char* arena_start_ptr; */
   // Points to the next available slot
-  char* tail;
+  char tail[];
 } Arena;
 
 typedef struct GMallocMetadata {
-  Arena arenas[7];
+  Arena* arenas[7];
   bool arenas_created[7];
 } GMAllocMetadata;
 

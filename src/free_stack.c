@@ -5,8 +5,6 @@ FreeStack* FreeStack_new(size_t pages) {
                               MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 
   FreeStack* free_stack = (FreeStack*)segment;
-  // List points to the end of the Stack struct to ensure alignment
-  free_stack->list = (Byte**)(free_stack + 1);
   free_stack->pages = pages;
 
   if (segment == MAP_FAILED) {
@@ -14,6 +12,7 @@ FreeStack* FreeStack_new(size_t pages) {
     exit(1);
   }
 
+  // TODO: Revise
   size_t end_of_stack = (size_t)((Byte*)free_stack + PAGE_SIZE * pages);
 
   log_debug(
@@ -28,6 +27,10 @@ FreeStack* FreeStack_new(size_t pages) {
   free_stack->len = 0;
 
   return free_stack;
+}
+
+bool FreeStack_is_empty(FreeStack* stack) {
+  return stack->len == 0;
 }
 
 bool FreeStack_destroy(FreeStack* stack) {

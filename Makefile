@@ -79,9 +79,9 @@ test: $(TARGET) $(TEST_DIR)/bin $(TESTBINS) $(HEADERS)
 ## Example
 example: bin/example
 
-bin/example: $(TARGET)
+bin/example: $(TARGET) examples/main.c
 	$(CC) $(CFLAGS) examples/main.c -o $@ $(TARGET)
-	./bin/example
+	# ./bin/example
 
 ## INIT Project structure
 init:
