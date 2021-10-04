@@ -15,7 +15,7 @@ typedef struct ArenaHeader {
 
 typedef struct Block {
   Arena* arena;
-  char* block;
+  byte* block;
 } Block;
 
 typedef struct Arena {

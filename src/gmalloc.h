@@ -17,7 +17,7 @@ typedef struct Arena {
   ArenaHeader* header;
   /* char* arena_start_ptr; */
   // Points to the next available slot
-  char tail[];
+  byte tail[];
 } Arena;
 
 typedef struct GMallocMetadata {

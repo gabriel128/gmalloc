@@ -1,7 +1,7 @@
 #include "free_stack.h"
 
 FreeStack* FreeStack_new(size_t pages) {
-  char* segment = (char*)mmap(NULL, PAGE_SIZE * pages, PROT_READ | PROT_WRITE,
+  byte* segment = (byte*)mmap(NULL, PAGE_SIZE * pages, PROT_READ | PROT_WRITE,
                               MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 
   FreeStack* free_stack = (FreeStack*)segment;
@@ -19,8 +19,8 @@ FreeStack* FreeStack_new(size_t pages) {
       "free_stack starts at %p, list starts at %p, and finishes at %zx \n",
       free_stack, free_stack->list, end_of_stack);
 
-  size_t capacity_in_bytes = (Byte*)end_of_stack - (Byte*)free_stack->list;
-  size_t capacity = capacity_in_bytes / sizeof(Byte*);
+  size_t capacity_in_bytes = (byte*)end_of_stack - (byte*)free_stack->list;
+  size_t capacity = capacity_in_bytes / sizeof(byte*);
 
   free_stack->cursor = 0;
   free_stack->capacity = capacity;
@@ -42,7 +42,7 @@ bool FreeStack_destroy(FreeStack* stack) {
   }
 }
 
-bool FreeStack_push(FreeStack* stack, Byte* mem_address) {
+bool FreeStack_push(FreeStack* stack, byte* mem_address) {
   if (stack == NULL) {
     return false;
   }
@@ -69,7 +69,7 @@ PtrResult FreeStack_pop(FreeStack* stack) {
 
   stack->cursor--;
   stack->len--;
-  Byte* val = stack->list[stack->cursor];
+  byte* val = stack->list[stack->cursor];
 
   return PTR_OK(val);
 }

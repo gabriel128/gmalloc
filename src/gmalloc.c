@@ -79,13 +79,13 @@ static void destroy_arena(Arena* arena) {
   metadata.arenas_created[arena_index] = false;
 }
 
-static char* find_free_space(Arena* arena) {
+static byte* find_free_space(Arena* arena) {
   ArenaHeader* header = arena->header;
   FreeStack* free_stack = header->free_stack;
 
   if (free_stack->len > 0) {
     PtrResult index = FreeStack_pop(free_stack);
-    char* ptr = (char*)index.the.val;
+    byte* ptr = (byte*)index.the.val;
 
     log_debug("[gmalloc] using free_stack %p \n", ptr);
     return ptr;
@@ -97,7 +97,7 @@ static char* find_free_space(Arena* arena) {
     return NULL;
   }
 
-  char* tail_addr = &arena->tail[header->len * header->bucket_size];
+  byte* tail_addr = &arena->tail[header->len * header->bucket_size];
 
   log_debug("[gmalloc] using tail at %p \n", tail_addr);
 
@@ -127,7 +127,7 @@ void* gmalloc(size_t size) {
 
   Arena* arena = metadata.arenas[bucket_index];
 
-  char* free_space = find_free_space(arena);
+  byte* free_space = find_free_space(arena);
 
   if (free_space == NULL) {
     log_error("Arena Ran out of free space");
@@ -157,10 +157,10 @@ int gfree(void* ptr) {
       continue;
 
     // TODO: move to arena.c
-    char* tail_addr =
+    byte* tail_addr =
         &arena->tail[arena->header->bucket_size * arena->header->capacity];
 
-    if ((char*)ptr >= (char*)arena && ((char*)ptr <= tail_addr)) {
+    if ((byte*)ptr >= (byte*)arena && ((byte*)ptr <= tail_addr)) {
       found = true;
       break;
     }
@@ -181,10 +181,10 @@ int gfree(void* ptr) {
   if (header->len == 0) {
     // For now since it's only 1 arena per bucket
     // we leave just use the free_stack
-    FreeStack_push(header->free_stack, (Byte*)ptr);
+    FreeStack_push(header->free_stack, (byte*)ptr);
     /* destroy_arena(arena); */
   } else {
-    FreeStack_push(header->free_stack, (Byte*)ptr);
+    FreeStack_push(header->free_stack, (byte*)ptr);
   }
 
   return 1;

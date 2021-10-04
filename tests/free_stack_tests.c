@@ -20,13 +20,13 @@ Test(free_stack_tests, test_basic_run) {
     int address2 = 2;
     int address3 = 3;
 
-    bool succeeded = FreeStack_push(stack, (Byte*)&address1);
+    bool succeeded = FreeStack_push(stack, (byte*)&address1);
     cr_expect(succeeded);
     cr_expect(stack->cursor == 1);
     cr_expect(stack->len == 1);
 
-    FreeStack_push(stack, (Byte*)&address2);
-    FreeStack_push(stack, (Byte*)&address3);
+    FreeStack_push(stack, (byte*)&address2);
+    FreeStack_push(stack, (byte*)&address3);
 
     PtrResult val_res = FreeStack_pop(stack);
     cr_assert(IS_OK(val_res));

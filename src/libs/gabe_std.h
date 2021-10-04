@@ -36,7 +36,7 @@
           __FILE__, __LINE__, ##__VA_ARGS__)
 
 // Better semantics for byte
-typedef unsigned char Byte;
+typedef unsigned char byte;
 
 typedef enum { RESULT_OK, RESULT_ERR } ResultKind;
 
@@ -45,7 +45,7 @@ typedef struct UIntResult {
 
   union {
     uint64_t val;
-    char* err;
+    byte* err;
   } the;
 } UIntResult;
 
@@ -62,7 +62,7 @@ typedef struct PtrResult {
   ResultKind kind;
 
   union {
-    Byte* val;
+    byte* val;
     char* err;
   } the;
 } PtrResult;

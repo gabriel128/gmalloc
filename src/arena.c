@@ -1,6 +1,6 @@
 #include "arena.h"
 
-static size_t calculate_capacity(char* init, uint16_t pages, char* block_init, uint16_t block_size) {
+static size_t calculate_capacity(byte* init, uint16_t pages, byte* block_init, uint16_t block_size) {
     size_t end_of_arena =  (size_t) (init + PAGE_SIZE * pages);
     return (size_t)((end_of_arena - (size_t)block_init) / block_size);
 }
@@ -19,7 +19,7 @@ Arena* Arena_create(uint16_t bucket_size) {
   Arena* arena = (Arena*)(arena_header + 1);
   arena->header = arena_header;
 
-  arena_header->capacity = calculate_capacity((char*)arena_header, 1, (char*)arena->blocks, bucket_size);
+  arena_header->capacity = calculate_capacity((byte*)arena_header, 1, (byte*)arena->blocks, bucket_size);
 
   log_debug(
       "[Arena_create] header is at %p, blocks is at %p, arena is at %p \n",

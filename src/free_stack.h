@@ -14,12 +14,12 @@ typedef struct FreeStack {
   size_t capacity;
   size_t len;
   // Hols up to ~512 per page (i.e. Page - metadata)
-  Byte* list[];
+  byte* list[];
 } FreeStack;
 
 FreeStack* FreeStack_new(size_t size);
 bool FreeStack_destroy(FreeStack* stack);
-bool FreeStack_push(FreeStack* stack, Byte* slot_index);
+bool FreeStack_push(FreeStack* stack, byte* slot_index);
 PtrResult FreeStack_pop(FreeStack* stack);
 PtrResult FreeStack_top(FreeStack* stack);
 

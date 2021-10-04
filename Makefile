@@ -74,14 +74,13 @@ $(TEST_DIR)/bin/%: $(TEST_DIR)/%.c $(OBJECTS) $(HEADERS)
 
 test: CFLAGS=-DNDEBUG
 test: $(TARGET) $(TEST_DIR)/bin $(TESTBINS) $(HEADERS)
-	for test in $(TESTBINS); do ./$$test ; done
+	for test in $(TESTBINS); do ./$$test --verbose=2 ; done
 
 ## Example
 example: bin/example
 
 bin/example: $(TARGET) examples/main.c
 	$(CC) $(CFLAGS) examples/main.c -o $@ $(TARGET)
-	# ./bin/example
 
 ## INIT Project structure
 init:
