@@ -67,7 +67,6 @@ typedef struct PtrResult {
   } the;
 } PtrResult;
 
-
 #define IS_OK(result) ((result).kind == RESULT_OK)
 #define IS_ERR(result) ((result).kind == RESULT_ERR)
 
@@ -79,4 +78,3 @@ typedef struct PtrResult {
 
 #define PTR_OK(value) ((PtrResult){RESULT_OK, {.val = value}})
 #define PTR_ERR(error) ((PtrResult){RESULT_ERR, {.err = error}})
-

@@ -25,7 +25,6 @@ typedef struct GMallocMetadata {
   bool arenas_created[7];
 } GMAllocMetadata;
 
-
 void gmalloc_init(int pages);
 void* gmalloc(size_t size);
 int gfree(void* ptr);

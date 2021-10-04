@@ -13,7 +13,7 @@ FreeStack* FreeStack_new(size_t pages) {
   }
 
   // TODO: Revise
-  size_t end_of_stack = (size_t)((Byte*)free_stack + PAGE_SIZE * pages);
+  size_t end_of_stack = (size_t)(segment + PAGE_SIZE * pages);
 
   log_debug(
       "free_stack starts at %p, list starts at %p, and finishes at %zx \n",
@@ -29,9 +29,7 @@ FreeStack* FreeStack_new(size_t pages) {
   return free_stack;
 }
 
-bool FreeStack_is_empty(FreeStack* stack) {
-  return stack->len == 0;
-}
+bool FreeStack_is_empty(FreeStack* stack) { return stack->len == 0; }
 
 bool FreeStack_destroy(FreeStack* stack) {
   int err = munmap(stack, PAGE_SIZE * stack->pages);

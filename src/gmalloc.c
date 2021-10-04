@@ -29,9 +29,7 @@ size_t find_bucket_index(size_t size) {
   return -1;
 }
 
-size_t bucket_size_from_index(size_t index) {
-  return 1<<(index+3);
-}
+size_t bucket_size_from_index(size_t index) { return 1 << (index + 3); }
 
 void* mem_init(int pages) {
   int fd = open("/dev/zero", O_RDWR);
@@ -58,15 +56,17 @@ static Arena* create_arena(uint16_t bucket_size) {
 
   arena_header->bucket_size = bucket_size,
   arena_header->size_in_bytes = PAGE_SIZE * pages,
-  // TODO: calculate capacity as: capacity = (arena_header + PAGE_SIZE - tail_addr) / bucket_size
-  arena_header->capacity = PAGE_SIZE * pages / bucket_size,
+  // TODO: calculate capacity as: capacity = (arena_header + PAGE_SIZE -
+  // tail_addr) / bucket_size
+      arena_header->capacity = PAGE_SIZE * pages / bucket_size,
   arena_header->free_stack = FreeStack_new(1);
   arena_header->len = 0;
 
   Arena* arena = (Arena*)(arena_header + 1);
   arena->header = arena_header;
 
-  log_debug("[create_arena] header is at %p, tail is at %p, arena is at %p \n", arena_header, arena->tail, arena);
+  log_debug("[create_arena] header is at %p, tail is at %p, arena is at %p \n",
+            arena_header, arena->tail, arena);
 
   return arena;
 }
@@ -104,7 +104,6 @@ static char* find_free_space(Arena* arena) {
   return tail_addr;
 }
 
-
 void* gmalloc(size_t size) {
   log_debug("[gmalloc] for size %zu\n", size);
 
@@ -120,7 +119,8 @@ void* gmalloc(size_t size) {
   }
 
   if (!metadata.arenas_created[bucket_index]) {
-    metadata.arenas[bucket_index] = create_arena(bucket_size_from_index(bucket_index));
+    metadata.arenas[bucket_index] =
+        create_arena(bucket_size_from_index(bucket_index));
     // TODO: Use NULL instead of extra space
     metadata.arenas_created[bucket_index] = true;
   }
@@ -153,18 +153,20 @@ int gfree(void* ptr) {
   for (size_t i = 0; i < arenas_length; i++) {
     arena = metadata.arenas[i];
 
-    if(arena == NULL) continue;
+    if (arena == NULL)
+      continue;
 
     // TODO: move to arena.c
-    char* tail_addr = &arena->tail[arena->header->bucket_size * arena->header->capacity];
+    char* tail_addr =
+        &arena->tail[arena->header->bucket_size * arena->header->capacity];
 
-    if ((char*)ptr >= (char*)arena && ((char*)ptr <= tail_addr))   {
+    if ((char*)ptr >= (char*)arena && ((char*)ptr <= tail_addr)) {
       found = true;
       break;
     }
   }
 
-  if(!found) {
+  if (!found) {
     return -1;
   }
 
@@ -176,7 +178,7 @@ int gfree(void* ptr) {
 
   header->len--;
 
-  if(header->len == 0) {
+  if (header->len == 0) {
     // For now since it's only 1 arena per bucket
     // we leave just use the free_stack
     FreeStack_push(header->free_stack, (Byte*)ptr);
@@ -188,6 +190,4 @@ int gfree(void* ptr) {
   return 1;
 }
 
-GMAllocMetadata* gmalloc_metadata() {
-  return &metadata;
-}
+GMAllocMetadata* gmalloc_metadata() { return &metadata; }
