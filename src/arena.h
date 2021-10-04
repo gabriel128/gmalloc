@@ -8,22 +8,23 @@ typedef struct Arena Arena;
 typedef struct ArenaHeader {
   size_t capacity;
   size_t len;
-  uint16_t bucket_size;
-  uint16_t pages;
-  FreeStack* free_stack;
+  uint32_t bucket_size;
+  uint32_t mem_pages;
 } ArenaHeader;
 
-typedef struct Block {
+typedef struct MemBlock {
   Arena* arena;
   byte* block;
-} Block;
+} MemBlock;
 
 typedef struct Arena {
-  ArenaHeader* header;
+  ArenaHeader header;
+  FreeStack* free_stack;
   Arena* next_arena;
   Arena* prev_arena;
-  Block blocks[];
+  MemBlock blocks[];
 } Arena;
 
-Arena* Arena_create(uint16_t bucket_size);
+Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages);
 bool Arena_destroy(Arena* arena);
+MemBlock* Arena_add_mem_block(Arena* arena);
