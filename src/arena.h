@@ -28,5 +28,6 @@ typedef struct Arena {
 Arena* Arena_create(uint32_t, uint32_t);
 bool Arena_is_head(Arena*);
 bool Arena_destroy(Arena*);
-MemBlock* Arena_push_mem_block(Arena*);
+MemBlock* Arena_get_mem_block(Arena*);
 bool Arena_free_mem_block(MemBlock*);
+MemBlock* Arena_find_free_mem_block(Arena* head);

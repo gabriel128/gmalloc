@@ -1,11 +1,5 @@
 #include "arena.h"
 
-static size_t calculate_capacity(byte* init, uint32_t pages, byte* block_init,
-                                 size_t block_size) {
-  size_t end_of_arena = (uintptr_t)(init + PAGE_SIZE * pages);
-  return (size_t)((end_of_arena - (uintptr_t)block_init) / block_size);
-}
-
 Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
   if (bucket_size == 0 || mem_pages == 0) {
     return NULL;
@@ -68,10 +62,27 @@ void* next_available_block_position(Arena* arena) {
   return (arena->blocks + (sizeof(MemBlock) + header.bucket_size) * header.len);
 }
 
-MemBlock* Arena_push_mem_block(Arena* arena) {
+static MemBlock* try_from_free_stack(FreeStack* free_stack) {
+  if(FreeStack_is_empty(free_stack)) return NULL;
+
+  PtrResult mem_block_res = FreeStack_pop(free_stack);
+
+  if (IS_ERR(mem_block_res)) {
+    log_error("[Arena_get_mem_block] Error on poping free_stack");
+    return NULL;
+  }
+
+  return (MemBlock*)mem_block_res.the.val;
+}
+
+MemBlock* Arena_get_mem_block(Arena* arena) {
   if (arena == NULL) {
     return NULL;
   }
+
+  MemBlock* mem_block = try_from_free_stack(arena->free_stack);
+
+  if(mem_block != NULL) return mem_block;
 
   ArenaHeader* header = &arena->header;
 
@@ -86,10 +97,9 @@ MemBlock* Arena_push_mem_block(Arena* arena) {
 
     arena->next_arena = new_arena;
     new_arena->prev_arena = arena;
-    return Arena_push_mem_block(new_arena);
+    return Arena_get_mem_block(new_arena);
   } else {
     MemBlock* block = (MemBlock*)next_available_block_position(arena);
-
     block->arena = arena;
 
     header->len++;
@@ -98,10 +108,10 @@ MemBlock* Arena_push_mem_block(Arena* arena) {
   }
 }
 
-bool Arena_is_head(Arena* arena) { return arena->prev_arena == NULL; }
+inline bool Arena_is_head(Arena* arena) { return arena->prev_arena == NULL; }
 
 // NOTE: Double freeing a memory block is undefined behaviour
-// for now
+// (for now)
 bool Arena_free_mem_block(MemBlock* block) {
   if (block == NULL) {
     return false;

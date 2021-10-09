@@ -16,3 +16,8 @@ void* mem_zero_init(int pages) {
 
   return ptr;
 }
+
+size_t calculate_capacity(byte* init, uint32_t pages, byte* block_init, size_t block_size) {
+  size_t end_of_arena = (uintptr_t)(init + PAGE_SIZE * pages);
+  return (size_t)((end_of_arena - (uintptr_t)block_init) / block_size);
+}

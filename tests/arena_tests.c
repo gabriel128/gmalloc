@@ -42,20 +42,19 @@ Test(arena_tests, sixteen_byte_bucket_creation) {
     cr_assert_eq(header.capacity, 168, "Capacity is %zu \n", header.capacity);
 }
 
-Test(arena_tests, push_mem_blocks_between_capacity_8) {
+Test(arena_tests, get_mem_blocks_between_capacity_8) {
     Arena* arena = Arena_create(8, 1);
     ArenaHeader* header = &arena->header;
 
-    MemBlock* block = Arena_push_mem_block(arena);
+    MemBlock* block = Arena_get_mem_block(arena);
     *(long*)block->data = 42;
 
     cr_assert_eq(header->len, 1, "Len is %zu \n", header->len);
 
-    MemBlock* block2 = Arena_push_mem_block(arena);
+    MemBlock* block2 = Arena_get_mem_block(arena);
     *(long*)block2->data = 43;
 
     cr_assert_eq(header->len, 2, "Len is %zu \n", header->len);
-
 
     cr_assert_eq(block->arena, arena, "Block arena is %p, arena is %p\n", block->arena, arena);
     cr_assert_eq(*(long*)block->data, 42, "Block data is %ld\n", *(long*)block->data);
@@ -69,7 +68,7 @@ Test(arena_tests, can_allocate_capacity8) {
     ArenaHeader* header = &arena->header;
 
     for (int i = 0; i < (int)header->capacity; i++) {
-      MemBlock* block = Arena_push_mem_block(arena);
+      MemBlock* block = Arena_get_mem_block(arena);
       cr_assert_not_null(block);
 
       *(int*)block->data = i;
@@ -83,13 +82,13 @@ Test(arena_tests, can_allocate_capacity8) {
     cr_assert_null(arena->next_arena);
 
     // Creates new Arena
-    MemBlock* block = Arena_push_mem_block(arena);
+    MemBlock* block = Arena_get_mem_block(arena);
     cr_assert_not_null(arena->next_arena);
 }
 
 Test(arena_tests, freeing_on_head_arena_does_not_destroy_arena) {
     Arena* arena = Arena_create(8, 1);
-    MemBlock* block = Arena_push_mem_block(arena);
+    MemBlock* block = Arena_get_mem_block(arena);
     bool succeeded = Arena_free_mem_block(block);
 
     cr_assert(succeeded);
@@ -101,8 +100,8 @@ Test(arena_tests, freeing_on_nonhead_arena_destroys_arena, .signal = SIGSEGV) {
     Arena* arena = Arena_create(PAGE_SIZE/2, 1);
     cr_assert_not_null(arena);
 
-    MemBlock* block1 = Arena_push_mem_block(arena);
-    MemBlock* block2 = Arena_push_mem_block(arena);
+    MemBlock* block1 = Arena_get_mem_block(arena);
+    MemBlock* block2 = Arena_get_mem_block(arena);
 
     cr_assert_neq(block1->arena, block2->arena);
     cr_assert_not_null(arena->next_arena);
@@ -121,11 +120,11 @@ Test(arena_tests, freeing_on_non_head_non_tail_arena, .signal = SIGSEGV) {
     Arena* arenas_head = Arena_create(PAGE_SIZE/2, 1);
     cr_assert_not_null(arenas_head);
 
-    MemBlock* block1 = Arena_push_mem_block(arenas_head);
+    MemBlock* block1 = Arena_get_mem_block(arenas_head);
     // This will go to the tail
-    MemBlock* block2 = Arena_push_mem_block(arenas_head);
+    MemBlock* block2 = Arena_get_mem_block(arenas_head);
     // This will go in the middle
-    MemBlock* block3 = Arena_push_mem_block(arenas_head);
+    MemBlock* block3 = Arena_get_mem_block(arenas_head);
 
     cr_assert_neq(block1->arena, block2->arena);
     cr_assert_neq(block1->arena, block3->arena);
