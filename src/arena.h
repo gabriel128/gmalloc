@@ -25,6 +25,9 @@ typedef struct Arena {
   byte blocks[];
 } Arena;
 
-Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages);
-bool Arena_destroy(Arena* arena);
-MemBlock* Arena_push_mem_block(Arena* arena);
+
+Arena* Arena_create(uint32_t, uint32_t);
+bool Arena_is_head(Arena*);
+bool Arena_destroy(Arena*);
+MemBlock* Arena_push_mem_block(Arena*);
+bool Arena_free_mem_block(MemBlock*);
