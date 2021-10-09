@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stddef.h>
 #include "libs/gabe_std.h"
 #include "mem.h"
 #include <assert.h>
@@ -8,6 +7,7 @@
 #include <limits.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

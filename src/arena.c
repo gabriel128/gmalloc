@@ -1,12 +1,13 @@
 #include "arena.h"
 
-static size_t calculate_capacity(byte* init, uint32_t pages, byte* block_init, size_t block_size) {
-    size_t end_of_arena =  (uintptr_t) (init + PAGE_SIZE * pages);
-    return (size_t)((end_of_arena - (uintptr_t)block_init) / block_size);
+static size_t calculate_capacity(byte* init, uint32_t pages, byte* block_init,
+                                 size_t block_size) {
+  size_t end_of_arena = (uintptr_t)(init + PAGE_SIZE * pages);
+  return (size_t)((end_of_arena - (uintptr_t)block_init) / block_size);
 }
 
 Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
-  if(bucket_size == 0 || mem_pages == 0) {
+  if (bucket_size == 0 || mem_pages == 0) {
     return NULL;
   }
 
@@ -18,7 +19,9 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
   arena_header->len = 0;
   arena_header->mem_pages = mem_pages;
 
-  arena_header->capacity = calculate_capacity((byte*)arena_header, mem_pages, arena->blocks, sizeof(Arena*) + bucket_size);
+  arena_header->capacity =
+      calculate_capacity((byte*)arena_header, mem_pages, arena->blocks,
+                         sizeof(Arena*) + bucket_size);
 
   log_debug(
       "[Arena_create] header is at %p, blocks starts at %p, arena is at %p \n",
@@ -28,7 +31,7 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
 }
 
 bool Arena_destroy(Arena* arena) {
-  if(arena == NULL) {
+  if (arena == NULL) {
     return false;
   }
 
@@ -49,13 +52,13 @@ void* next_available_block_position(Arena* arena) {
 }
 
 MemBlock* Arena_push_mem_block(Arena* arena) {
-  if(arena == NULL) {
+  if (arena == NULL) {
     return NULL;
   }
 
   ArenaHeader* header = &arena->header;
 
-  if(header->len == header->capacity) {
+  if (header->len == header->capacity) {
     Arena* new_arena = Arena_create(header->bucket_size, header->mem_pages);
     arena->next_arena = new_arena;
     new_arena->prev_arena = arena;
