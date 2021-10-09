@@ -63,7 +63,6 @@ MemBlock* Arena_push_mem_block(Arena* arena) {
   } else {
     MemBlock* block = (MemBlock*)next_available_block_position(arena);
 
-    printf("block is %p \n", block);
     block->arena = arena;
 
     header->len++;
