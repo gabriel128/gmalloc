@@ -28,7 +28,8 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
       arena_header, arena->blocks, arena);
 
   if (arena_header->capacity > arena->free_stack->capacity) {
-    log_error("[Arena_create] Arena capacity is bigger than the free_stack can support");
+    log_error("[Arena_create] Arena capacity is bigger than the free_stack can "
+              "support");
     return NULL;
   }
 
@@ -47,7 +48,7 @@ bool Arena_destroy(Arena* arena) {
     prev_arena->next_arena = next_arena;
   }
 
-  if(next_arena != NULL) {
+  if (next_arena != NULL) {
     next_arena->prev_arena = prev_arena;
   }
 
@@ -97,9 +98,7 @@ MemBlock* Arena_push_mem_block(Arena* arena) {
   }
 }
 
-bool Arena_is_head(Arena* arena) {
-  return arena->prev_arena == NULL;
-}
+bool Arena_is_head(Arena* arena) { return arena->prev_arena == NULL; }
 
 // NOTE: Double freeing a memory block is undefined behaviour
 // for now
@@ -111,7 +110,7 @@ bool Arena_free_mem_block(MemBlock* block) {
   Arena* arena = block->arena;
   FreeStack* free_stack = arena->free_stack;
 
-  bool all_arena_blocks_freed = (free_stack->len+1) == arena->header.len;
+  bool all_arena_blocks_freed = (free_stack->len + 1) == arena->header.len;
 
   if (!Arena_is_head(arena) && all_arena_blocks_freed) {
     return Arena_destroy(arena);

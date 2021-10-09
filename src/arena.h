@@ -25,7 +25,6 @@ typedef struct Arena {
   byte blocks[];
 } Arena;
 
-
 Arena* Arena_create(uint32_t, uint32_t);
 bool Arena_is_head(Arena*);
 bool Arena_destroy(Arena*);
