@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include "libs/gabe_std.h"
 #include "mem.h"
 #include <assert.h>

@@ -14,7 +14,7 @@ typedef struct ArenaHeader {
 
 typedef struct MemBlock {
   Arena* arena;
-  byte* block;
+  byte data[];
 } MemBlock;
 
 typedef struct Arena {
@@ -22,9 +22,9 @@ typedef struct Arena {
   FreeStack* free_stack;
   Arena* next_arena;
   Arena* prev_arena;
-  MemBlock blocks[];
+  byte blocks[];
 } Arena;
 
 Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages);
 bool Arena_destroy(Arena* arena);
-MemBlock* Arena_add_mem_block(Arena* arena);
+MemBlock* Arena_push_mem_block(Arena* arena);
