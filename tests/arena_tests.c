@@ -26,6 +26,28 @@ Test(arena_tests, eight_byte_bucket_creation) {
 
 }
 
+Test(arena_tests, eight_byte_multiple_pages_bucket_creation) {
+    printf("ArenaHeader size %zu \n", sizeof(ArenaHeader));
+    printf("Arena size %zu \n", sizeof(Arena));
+    printf("Offset of blocks %zu \n", offsetof(Arena, next_arena));
+
+    Arena* arena = Arena_create(8, 2);
+
+    cr_assert_not_null(arena->free_stack);
+    cr_assert_not_null(arena);
+    cr_assert_null(arena->next_arena);
+    cr_assert_null(arena->prev_arena);
+
+    ArenaHeader header = arena->header;
+
+    cr_assert_eq(header.bucket_size, 8);
+    cr_assert_eq(header.mem_pages, 2);
+    cr_assert_eq(header.len, 0);
+    cr_assert_eq(header.capacity, 509, "Capacity is %zu \n", header.capacity);
+
+}
+
+
 Test(arena_tests, sixteen_byte_bucket_creation) {
     Arena* arena = Arena_create(16, 1);
 
@@ -121,23 +143,26 @@ Test(arena_tests, freeing_on_non_head_non_tail_arena, .signal = SIGSEGV) {
     cr_assert_not_null(arenas_head);
 
     MemBlock* block1 = Arena_get_mem_block(arenas_head);
-    // This will go to the tail
     MemBlock* block2 = Arena_get_mem_block(arenas_head);
-    // This will go in the middle
+    MemBlock* block2b = Arena_get_mem_block(arenas_head);
+    MemBlock* block2c = Arena_get_mem_block(arenas_head);
     MemBlock* block3 = Arena_get_mem_block(arenas_head);
 
     cr_assert_neq(block1->arena, block2->arena);
+    cr_assert_eq(block2->arena, block2b->arena);
+    cr_assert_eq(block2->arena, block2c->arena);
     cr_assert_neq(block1->arena, block3->arena);
-    cr_assert_neq(block2->arena, block3->arena);
+    cr_assert_neq(block2->arena, block3->arena, "block2->arena is %p, block3 arena is %p \n",
+                  block2->arena, block3->arena);
 
     cr_assert_eq(arenas_head->prev_arena, NULL);
-    cr_assert_eq(arenas_head->next_arena, block3->arena);
+    cr_assert_eq(arenas_head->next_arena, block2->arena);
 
-    cr_assert_eq(block3->arena->prev_arena, block1->arena);
-    cr_assert_eq(block3->arena->next_arena, block2->arena);
+    cr_assert_eq(block2->arena->prev_arena, block1->arena);
+    cr_assert_eq(block2->arena->next_arena, block3->arena);
 
-    cr_assert_eq(block2->arena->prev_arena, block3->arena);
-    cr_assert_eq(block2->arena->next_arena, NULL);
+    cr_assert_eq(block3->arena->prev_arena, block2->arena);
+    cr_assert_eq(block3->arena->next_arena, NULL);
 
     // Destroying the middle Arena
     bool succeeded = Arena_free_mem_block(block3);

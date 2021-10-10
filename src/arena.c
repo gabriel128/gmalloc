@@ -1,12 +1,18 @@
 #include "arena.h"
 
 Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
+  if (bucket_size > (PAGE_SIZE/2 + 1)) {
+    log_error("[Arena_create] can't allocate more than %d", PAGE_SIZE/2 + 1);
+    perror("Max allowed size is bytes %d \n");
+    return NULL;
+  }
+
   if (bucket_size == 0 || mem_pages == 0) {
     return NULL;
   }
 
   Arena* arena = mem_zero_init(mem_pages);
-  arena->free_stack = FreeStack_new(1);
+  arena->free_stack = FreeStack_new(mem_pages);
 
   ArenaHeader* arena_header = &arena->header;
   arena_header->bucket_size = bucket_size;
@@ -87,17 +93,17 @@ MemBlock* Arena_get_mem_block(Arena* arena) {
   ArenaHeader* header = &arena->header;
 
   if (header->len == header->capacity) {
-    Arena* new_arena = Arena_create(header->bucket_size, header->mem_pages);
     Arena* next_arena = arena->next_arena;
 
-    if (next_arena != NULL) {
-      next_arena->prev_arena = new_arena;
-      new_arena->next_arena = next_arena;
+    if(next_arena != NULL) {
+      return Arena_get_mem_block(next_arena);
+    } else {
+      Arena* new_arena = Arena_create(header->bucket_size, header->mem_pages*2);
+      arena->next_arena = new_arena;
+      new_arena->prev_arena = arena;
+      return Arena_get_mem_block(new_arena);
     }
 
-    arena->next_arena = new_arena;
-    new_arena->prev_arena = arena;
-    return Arena_get_mem_block(new_arena);
   } else {
     MemBlock* block = (MemBlock*)next_available_block_position(arena);
     block->arena = arena;
@@ -122,6 +128,7 @@ bool Arena_free_mem_block(MemBlock* block) {
 
   bool all_arena_blocks_freed = (free_stack->len + 1) == arena->header.len;
 
+  // We always keep the head alive
   if (!Arena_is_head(arena) && all_arena_blocks_freed) {
     return Arena_destroy(arena);
   } else {

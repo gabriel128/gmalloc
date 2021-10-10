@@ -32,16 +32,23 @@ int main() {
     /* get_mem(&init_mem); */
     long init_mem = get_mem_usage();
 
-    int* x = gmalloc(4);
+    for (int i = 0; i < 10000000; i++) {
+      int* a = gmalloc(8);
+      /* *a = 4; */
+      memset(a, 1, 8);
+      /* printf("a is %d i is %d \n", *a, i); */
+    }
     /* memset(x, 1, 8); */
-    *x = 0xFFFFFFFF;
-    gfree(x);
+    /* *x = 0xFFFFFFFF; */
+    /* gfree(x); */
 
     /* int after_free_mem; */
     /* get_mem(&after_free_mem); */
 
     long after_free_mem = get_mem_usage();
-    printf("Mem usage: %ld %ld\n", after_free_mem, init_mem);
+    printf("Mem usage: %ld MB\n", (after_free_mem - init_mem) / 1024^2);
+/* ./bin/example  0.26s user 0.54s system 60% cpu 1.333 total */
+
 
     /* while(1); */
 
