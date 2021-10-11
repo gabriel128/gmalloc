@@ -1,8 +1,8 @@
 #include "arena.h"
 
 Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
-  if (bucket_size > (PAGE_SIZE/2 + 1)) {
-    log_error("[Arena_create] can't allocate more than %d", PAGE_SIZE/2 + 1);
+  if (bucket_size > (PAGE_SIZE / 2 + 1)) {
+    log_error("[Arena_create] can't allocate more than %d", PAGE_SIZE / 2 + 1);
     perror("Max allowed size\n");
     return NULL;
   }
@@ -12,7 +12,7 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
   }
 
   Arena* arena = mem_zero_init(mem_pages);
-  arena->free_stack = FreeStack_new(mem_pages);
+  arena->free_stack = NULL;
 
   ArenaHeader* arena_header = &arena->header;
   arena_header->bucket_size = bucket_size;
@@ -26,12 +26,6 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages) {
   log_debug(
       "[Arena_create] header is at %p, blocks starts at %p, arena is at %p \n",
       arena_header, arena->blocks, arena);
-
-  if (arena_header->capacity > arena->free_stack->capacity) {
-    log_error("[Arena_create] Arena capacity is bigger than the free_stack can "
-              "support");
-    return NULL;
-  }
 
   return arena;
 }
@@ -69,7 +63,8 @@ void* next_available_block_position(Arena* arena) {
 }
 
 static MemBlock* try_from_free_stack(FreeStack* free_stack) {
-  if(free_stack->len == 0) return NULL;
+  if (free_stack->len == 0)
+    return NULL;
 
   PtrResult mem_block_res = FreeStack_pop(free_stack);
 
@@ -86,15 +81,16 @@ MemBlock* Arena_get_mem_block(Arena* arena) {
     return NULL;
   }
 
-  MemBlock* mem_block = try_from_free_stack(arena->free_stack);
+  if (arena->free_stack != NULL) {
+    MemBlock* mem_block = try_from_free_stack(arena->free_stack);
 
-  if (mem_block != NULL)
-    return mem_block;
+    if (mem_block != NULL)
+      return mem_block;
+  }
 
   ArenaHeader* header = &arena->header;
 
   if (header->len < header->capacity) {
-
     MemBlock* block = (MemBlock*)next_available_block_position(arena);
     block->arena = arena;
 
@@ -127,6 +123,16 @@ bool Arena_free_mem_block(MemBlock* block) {
   }
 
   Arena* arena = block->arena;
+
+  if (arena->free_stack == NULL) {
+    arena->free_stack = FreeStack_new(arena->header.mem_pages);
+
+    if (arena->header.capacity > arena->free_stack->capacity)
+      log_error(
+          "[Arena_create] Arena capacity is bigger than the free_stack can "
+          "support");
+  }
+
   FreeStack* free_stack = arena->free_stack;
 
   bool all_arena_blocks_freed = (free_stack->len + 1) == arena->header.len;

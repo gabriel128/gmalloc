@@ -1,10 +1,10 @@
 #pragma once
 
-#include "common.h"
 #include "arena.h"
+#include "common.h"
 // Assumed 4kb pages for simplicity
 #define PAGE_SIZE 4096
-#define FIRST_ARENA_PAGES_QTY 10
+#define FIRST_ARENA_PAGES_QTY 50
 
 typedef struct GMallocMetadata {
   Arena* arenas[7];

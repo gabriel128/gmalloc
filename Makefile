@@ -88,18 +88,18 @@ bench: bin/bench
 
 bin/bench: CFLAGS+=-DNDEBUG
 bin/bench: release examples/bench.c
-	$(CC) $(CFLAGS) examples/bench.c -o $@ $(TARGET)
+	$(CC) -pthread $(CFLAGS) examples/bench.c -o $@ $(TARGET)
 
 bench_perf: bin/bench_perf
 
 bin/bench_perf: CFLAGS+=-DNDEBUG
 bin/bench_perf: $(TARGET) examples/bench.c
-	$(CC) $(CFLAGS) examples/bench.c -o $@ $(TARGET)
+	$(CC) -pthread $(CFLAGS) examples/bench.c -o $@ $(TARGET)
 
 bench_malloc: bin/bench_malloc
 
 bin/bench_malloc: release examples/bench_malloc.c
-	$(CC) $(CFLAGS) examples/bench_malloc.c -o $@ $(TARGET)
+	$(CC) -pthread $(CFLAGS) examples/bench_malloc.c -o $@ $(TARGET)
 
 ## INIT Project structure
 init:
