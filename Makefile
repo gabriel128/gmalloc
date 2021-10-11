@@ -79,8 +79,27 @@ test: $(TARGET) $(TEST_DIR)/bin $(TESTBINS) $(HEADERS)
 ## Example
 example: bin/example
 
-bin/example: $(TARGET) examples/main.c
+bin/example: CFLAGS+=-DNDEBUG
+bin/example: release examples/main.c
 	$(CC) $(CFLAGS) examples/main.c -o $@ $(TARGET)
+
+## Benches
+bench: bin/bench
+
+bin/bench: CFLAGS+=-DNDEBUG
+bin/bench: release examples/bench.c
+	$(CC) $(CFLAGS) examples/bench.c -o $@ $(TARGET)
+
+bench_perf: bin/bench_perf
+
+bin/bench_perf: CFLAGS+=-DNDEBUG
+bin/bench_perf: $(TARGET) examples/bench.c
+	$(CC) $(CFLAGS) examples/bench.c -o $@ $(TARGET)
+
+bench_malloc: bin/bench_malloc
+
+bin/bench_malloc: release examples/bench_malloc.c
+	$(CC) $(CFLAGS) examples/bench_malloc.c -o $@ $(TARGET)
 
 ## INIT Project structure
 init:

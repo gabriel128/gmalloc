@@ -3,6 +3,8 @@
 #include "common.h"
 #include "free_stack.h"
 
+#define ARENA_LINEAR_GROWTH 5
+
 typedef struct Arena Arena;
 
 typedef struct ArenaHeader {

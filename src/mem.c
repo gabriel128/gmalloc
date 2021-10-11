@@ -8,8 +8,7 @@ void* mem_zero_init(int pages) {
   void* ptr =
       mmap(NULL, page_size * pages, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 
-  /* log_debug("[Mem_zero_init] Page_size created %d, %d, %p \n", page_size, pages, ptr); */
-  printf("[Mem_zero_init] Page_size created %d, %d, %p \n", page_size, pages, ptr);
+  log_debug("[Mem_zero_init] Page_size created %d, %d, %p \n", page_size, pages, ptr);
 
   if (ptr == MAP_FAILED) {
     perror("Error on mmap");

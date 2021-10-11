@@ -46,8 +46,7 @@ void* gmalloc(size_t size) {
   }
 
   if (metadata.arenas[bucket_index] == NULL) {
-    // TODO: Make pages dynamic
-    metadata.arenas[bucket_index] = Arena_create(bucket_size_from_index(bucket_index), 10);
+    metadata.arenas[bucket_index] = Arena_create(bucket_size_from_index(bucket_index), FIRST_ARENA_PAGES_QTY);
   }
 
   Arena* arena = metadata.arenas[bucket_index];
