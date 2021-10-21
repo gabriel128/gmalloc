@@ -44,7 +44,7 @@ $(SO_TARGET): $(TARGET) $(OBJECTS)
 
 # Release build
 
-release: CFLAGS=-DNDEBUG -O2 -Wall -Wextra $(OPTFLAGS)
+release: CFLAGS=-DNDEBUG -O3 -Wall -Wextra $(OPTFLAGS)
 release: clean
 release: $(TARGET)
 

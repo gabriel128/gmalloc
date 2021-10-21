@@ -48,7 +48,7 @@ void single_thread_mixed_freeing_bench() {
     for (int i = 0; i < ALLOC_SIZE; i++) {
       allocs[i] = gmalloc(8);
       memset(allocs[i], 1, 8);
-      if (i > 10000) {
+      if (i > 1000) {
           gfree(allocs[i-1000]);
       }
     }
@@ -90,50 +90,109 @@ void single_thread_allatonce_bench() {
     printf("============================= \n");
 }
 
-int* allocs_multi_tr[ALLOC_SIZE];
+long* allocs_multi_tr[ALLOC_SIZE];
+const int threads_qty = ALLOC_SIZE/10000;
 
-void *alloc(void *args)
+void* alloc_it(void *args)
 {
-    printf("blah \n");
+    int* init = (int*)args;
+    int total_numbers = ALLOC_SIZE / threads_qty;
+
+    /* printf("Test %d %d %d \n", *init, (*init * total_numbers), ((*init * total_numbers) + total_numbers)); */
+    for(int i = *init; i < (*init + total_numbers); i++) {
+      long* a = gmalloc(8);
+      allocs_multi_tr[i] = a;
+    }
     return NULL;
 }
 
+void* set_it(void *args)
+{
+    int* init = (int*)args;
+    int total_numbers = ALLOC_SIZE / threads_qty;
+
+    for(int i = *init; i < (*init + total_numbers); i++) {
+      *allocs_multi_tr[i] = 42;
+    }
+    return NULL;
+}
+
+
+/* void* free_it(void *args) */
+/* { */
+/*     int* init = (int*)args; */
+/*     int total_numbers = ALLOC_SIZE / threads_qty; */
+/*     for(int i = *init; i < (*init + total_numbers); i++) { */
+/*       long* */
+/*       free(allocs_multi_tr[i]); */
+/*     } */
+/*     return NULL; */
+/* } */
+
 void multi_thread_bench() {
-    printf(" ============================= \n");
-    printf("Running Multi Thread Bench, Running %d Iterations \n", ALLOC_SIZE);
+    printf("============================= \n");
+    printf("3. Running Multi Thread Bench, Running %d Iterations \n", ALLOC_SIZE);
+    printf("============================= \n");
+
+    pthread_mutex_t mutex;
+    pthread_mutex_init(&mutex, NULL);
 
     long init_mem = get_mem_usage();
+    clock_t start_time = clock();
 
-    int threads_qty = 20;
     pthread_t alloc_thread_ids[threads_qty];
 
+    int a = 0;
     for(int i = 0; i < threads_qty; i++) {
-        pthread_create(&alloc_thread_ids[i], NULL, alloc, &i);
+        int* ptr = gmalloc(sizeof(int));
+        *ptr = i;
+        pthread_create(&alloc_thread_ids[i], NULL, alloc_it, ptr);
     }
 
     for(int i = 0; i < threads_qty; i++) {
         pthread_join(alloc_thread_ids[i], NULL);
     }
 
-    /* pthread_t free_thread_ids[threads_qty]; */
-    /* for(int i = 0; i < threads_qty; i++) { */
+    for(int i = 0; i < threads_qty; i++) {
+        int* ptr = gmalloc(sizeof(int));
+        *ptr = i;
+        pthread_create(&alloc_thread_ids[i], NULL, set_it, ptr);
+    }
 
-    /* } */
+    for(int i = 0; i < threads_qty; i++) {
+        pthread_join(alloc_thread_ids[i], NULL);
+    }
 
     long after_free_mem = get_mem_usage();
-    printf("Mem usage: %lf MB \n", (double)(after_free_mem - init_mem) / 1024);
+    double elapsed_time = (double)(clock() - start_time) / CLOCKS_PER_SEC;
+
+    /* for(int i = 0; i < ALLOC_SIZE; i++) */
+    /*     assert(*allocs_multi_tr[0] == 42); */
+
+    printf("============================= \n");
+    printf("3. Result => Time: %f,  Mem usage: %lf MB \n", elapsed_time, (double)(after_free_mem - init_mem) / 1024);
+    printf("============================= \n");
 }
 
 int main() {
-    int child = fork();
+    pid_t child, child2;
 
+    child = fork();
     if(child == 0 ) {
-        single_thread_allatonce_bench();
+        child2 = fork();
+
+        if(child2 == 0) {
+           /* multi_thread_bench(); */
+        } else {
+            single_thread_allatonce_bench();
+
+        }
     } else {
-        single_thread_mixed_freeing_bench();
+        /* single_thread_mixed_freeing_bench(); */
     }
 
     waitpid(child, 0, 0);
+    waitpid(child2, 0, 0);
 
     return 0;
 }
