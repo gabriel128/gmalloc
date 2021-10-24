@@ -5,7 +5,6 @@
 
 typedef struct ArenarrayItem {
   bool is_full;
-  bool used;
   Arena* arena;
 } ArenarrayItem;
 
