@@ -4,6 +4,7 @@ FreeStack* FreeStack_new(size_t pages) {
   byte* segment = (byte*)mmap(NULL, PAGE_SIZE * pages, PROT_READ | PROT_WRITE,
                               MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
 
+  log_debug("Maping FreeStack %zu", pages);
   FreeStack* free_stack = (FreeStack*)segment;
   free_stack->pages = pages;
 
@@ -12,12 +13,7 @@ FreeStack* FreeStack_new(size_t pages) {
     exit(1);
   }
 
-  // TODO: Revise
   size_t end_of_stack = (size_t)(segment + PAGE_SIZE * pages);
-
-  log_debug(
-      "free_stack starts at %p, list starts at %p, and finishes at %zx \n",
-      free_stack, free_stack->list, end_of_stack);
 
   size_t capacity_in_bytes = (byte*)end_of_stack - (byte*)free_stack->list;
   size_t capacity = capacity_in_bytes / sizeof(byte*);
@@ -32,6 +28,7 @@ FreeStack* FreeStack_new(size_t pages) {
 bool FreeStack_is_empty(FreeStack* stack) { return stack->len == 0; }
 
 bool FreeStack_destroy(FreeStack* stack) {
+  log_debug("Unmaping FreeStack %zu \b", stack->pages);
   int err = munmap(stack, PAGE_SIZE * stack->pages);
 
   if (err != 0) {

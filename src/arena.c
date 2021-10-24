@@ -15,6 +15,7 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages,
   }
 
   Arena* arena = mem_zero_init(mem_pages);
+  log_debug("Maping Arena %d \n", arenarray_index);
   arena->free_stack = NULL;
 
   ArenaHeader* arena_header = &arena->header;
@@ -27,10 +28,6 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages,
       calculate_capacity((byte*)arena_header, mem_pages, arena->blocks,
                          sizeof(Arena*) + bucket_size);
 
-  log_debug(
-      "[Arena_create] header is at %p, blocks starts at %p, arena is at %p \n",
-      arena_header, arena->blocks, arena);
-
   return arena;
 }
 
@@ -39,6 +36,7 @@ bool Arena_destroy(Arena* arena) {
     return false;
   }
   bool free_stack_freed = FreeStack_destroy(arena->free_stack);
+  log_debug("Unmaping Arena %d \n", arena->header.arenarray_index);
   int err = munmap(arena, arena->header.mem_pages);
 
   if (err != 0 || !free_stack_freed) {

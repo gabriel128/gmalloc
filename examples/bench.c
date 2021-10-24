@@ -78,7 +78,7 @@ void single_thread_allatonce_bench() {
       memset(allocs[i], 1, 8);
     }
 
-    for (int i = 0; i < ALLOC_SIZE/2; i++) {
+    for (int i = 0; i < ALLOC_SIZE; i++) {
       gfree(allocs[i]);
     }
 
@@ -175,24 +175,9 @@ void multi_thread_bench() {
 }
 
 int main() {
-    pid_t child, child2;
-
-    child = fork();
-    if(child == 0 ) {
-        child2 = fork();
-
-        if(child2 == 0) {
-           /* multi_thread_bench(); */
-        } else {
-            single_thread_allatonce_bench();
-
-        }
-    } else {
-        /* single_thread_mixed_freeing_bench(); */
-    }
-
-    waitpid(child, 0, 0);
-    waitpid(child2, 0, 0);
+    single_thread_allatonce_bench();
+    /* multi_thread_bench(); */
+    /* single_thread_mixed_freeing_bench(); */
 
     return 0;
 }

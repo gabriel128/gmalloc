@@ -1,7 +1,7 @@
 #include "../src/gmalloc.h"
 #include <sys/resource.h>
 
-#define ALLOC_SIZE 100000000
+#define ALLOC_SIZE 1
 
 long get_mem_usage() {
     struct rusage usage;
@@ -44,10 +44,10 @@ int main() {
     }
 
 
-    printf("alloc is %d \n", *allocs[1000]);
-    /* for (int i = 0; i < ALLOC_SIZE/2; i++) { */
-    /*   gfree(allocs[i]); */
-    /* } */
+    printf("alloc is %d \n", *allocs[0]);
+    for (int i = 0; i < ALLOC_SIZE; i++) {
+      gfree(allocs[i]);
+    }
 
     return 0;
 }
