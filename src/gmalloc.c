@@ -46,7 +46,8 @@ void* gmalloc(size_t size) {
   }
 
   if (!metadata.arenas_created[bucket_index]) {
-    metadata.arenas[bucket_index] = Arenarray_new(bucket_size_from_index(bucket_index));
+    metadata.arenas[bucket_index] =
+        Arenarray_new(bucket_size_from_index(bucket_index));
     metadata.arenas_created[bucket_index] = true;
   }
 
@@ -69,8 +70,13 @@ int gfree(void* ptr) {
   log_debug("[gfree] ptr %p\n", ptr);
 
   MemBlock* mem_block = (MemBlock*)((byte*)ptr - sizeof(MemBlock));
+  ArenaHeader header = mem_block->arena->header;
+  uint32_t bucket_size = header.bucket_size;
 
-  bool freed = Arena_free_mem_block(mem_block);
+  Arenarray* arenarray = &metadata.arenas[find_bucket_index(bucket_size)];
+
+  bool freed =
+      Arenarray_free_memblock(arenarray, mem_block, header.arenarray_index);
 
   if (!freed) {
     log_error("Memory couldn't be freed");
