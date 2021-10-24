@@ -27,7 +27,14 @@ typedef struct Arena {
   byte blocks[];
 } Arena;
 
+typedef enum { FREE_STACK_HAS_SPACE, FREE_STACK_FULL, UNKOWN } FreeStackState;
+
+typedef struct FreeResult {
+  bool success;
+  FreeStackState free_stack_state;
+} FreeResult;
+
 Arena* Arena_create(uint32_t, uint32_t, uint8_t);
 bool Arena_destroy(Arena*);
 MemBlock* Arena_get_mem_block(Arena*);
-bool Arena_free_mem_block(MemBlock*);
+FreeResult Arena_free_mem_block(MemBlock*);

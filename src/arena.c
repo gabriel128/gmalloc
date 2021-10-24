@@ -96,9 +96,9 @@ MemBlock* Arena_get_mem_block(Arena* arena) {
 // (for now)
 // It returns true if the memory has been added to the stack
 // or false if the stack is full
-bool Arena_free_mem_block(MemBlock* block) {
+FreeResult Arena_free_mem_block(MemBlock* block) {
   if (!block) {
-    return false;
+    return (FreeResult){false, UNKOWN};
   }
 
   Arena* arena = block->arena;
@@ -109,9 +109,14 @@ bool Arena_free_mem_block(MemBlock* block) {
 
   FreeStack* free_stack = arena->free_stack;
 
-  if (free_stack->len == arena->header.len) {
-    return false;
+  if (free_stack->len >= arena->header.len) {
+    return (FreeResult){false, FREE_STACK_FULL};
   } else {
-    return FreeStack_push(free_stack, (byte*)block);
+    bool ok = FreeStack_push(free_stack, (byte*)block);
+    FreeStackState free_stack_state = free_stack->len == arena->header.len
+                                          ? FREE_STACK_FULL
+                                          : FREE_STACK_HAS_SPACE;
+
+    return (FreeResult){ok, free_stack_state};
   }
 }

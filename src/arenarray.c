@@ -74,17 +74,20 @@ bool Arenarray_remove_arena(Arenarray* arenarray, Arena* arena) {
   return Arena_destroy(arena);
 }
 
-bool Arenarray_free_memblock(Arenarray* arenarray, MemBlock* block, uint8_t index) {
+bool Arenarray_free_memblock(Arenarray* arenarray, MemBlock* block,
+                             uint8_t index) {
   if (!block) {
     return false;
   }
 
-  bool memory_added_to_freestack = Arena_free_mem_block(block);
+  FreeResult result = Arena_free_mem_block(block);
 
-  if (memory_added_to_freestack) {
+  if (result.success && result.free_stack_state == FREE_STACK_HAS_SPACE) {
     arenarray->arenas[index].is_full = false;
     return true;
-  } else {
+  } else if (result.success && result.free_stack_state == FREE_STACK_FULL) {
     return Arenarray_remove_arena(arenarray, block->arena);
+  } else {
+    return false;
   }
 }

@@ -8,6 +8,7 @@
 Test(arena_tests, eight_byte_bucket_creation) {
     printf("ArenaHeader size %zu \n", sizeof(ArenaHeader));
     printf("Arena size %zu \n", sizeof(Arena));
+    printf("FreeResult size %zu \n", sizeof(FreeResult));
 
     Arena* arena = Arena_create(8, 1, 0);
 
@@ -98,9 +99,10 @@ Test(arena_tests, can_allocate_capacity8) {
 Test(arena_tests, freeing_on_arena) {
     Arena* arena = Arena_create(8, 1, 0);
     MemBlock* block = Arena_get_mem_block(arena);
-    bool succeeded = Arena_free_mem_block(block);
+    FreeResult result = Arena_free_mem_block(block);
 
-    cr_assert(succeeded);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_FULL);
     cr_assert_eq(arena->free_stack->len, 1);
 }
 
@@ -108,27 +110,33 @@ Test(arena_tests, freeing_multiple_on_arena) {
     Arena* arena = Arena_create(8, 1, 0);
     MemBlock* block = Arena_get_mem_block(arena);
     MemBlock* block2 = Arena_get_mem_block(arena);
-    bool succeeded = Arena_free_mem_block(block);
+    FreeResult result = Arena_free_mem_block(block);
 
-    cr_assert(succeeded);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_HAS_SPACE);
 
-    bool succeeded2 = Arena_free_mem_block(block);
+    FreeResult result2 = Arena_free_mem_block(block);
 
-    cr_assert(succeeded2);
+    cr_assert(result2.success);
+    cr_assert(result2.free_stack_state == FREE_STACK_FULL);
+
     cr_assert_eq(arena->free_stack->len, 2);
 }
 
 Test(arena_tests, alloc_and_freeing_multiple_will_reuse_mem) {
     Arena* arena = Arena_create(8, 1, 0);
     MemBlock* block = Arena_get_mem_block(arena);
-    bool succeeded = Arena_free_mem_block(block);
+    FreeResult result = Arena_free_mem_block(block);
 
-    cr_assert(succeeded);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_FULL);
 
     MemBlock* block2 = Arena_get_mem_block(arena);
-    bool succeeded2 = Arena_free_mem_block(block);
+    FreeResult result2 = Arena_free_mem_block(block);
 
-    cr_assert(succeeded2);
+    cr_assert(result2.success);
+    cr_assert(result2.free_stack_state == FREE_STACK_FULL);
+
     cr_assert_eq(arena->free_stack->len, 1);
     cr_assert_eq(block2->data, block->data);
 }
@@ -136,10 +144,13 @@ Test(arena_tests, alloc_and_freeing_multiple_will_reuse_mem) {
 Test(arena_tests, returns_false_when_trying_to_free_more_than_available) {
     Arena* arena = Arena_create(8, 1, 0);
     MemBlock* block = Arena_get_mem_block(arena);
-    bool succeeded = Arena_free_mem_block(block);
+    FreeResult result = Arena_free_mem_block(block);
 
-    cr_assert(succeeded);
-    bool succeeded2 = Arena_free_mem_block(block);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_FULL);
 
-    cr_assert(!succeeded2);
+    FreeResult result2 = Arena_free_mem_block(block);
+
+    cr_assert(!result2.success);
+    cr_assert(result2.free_stack_state == FREE_STACK_FULL);
 }
