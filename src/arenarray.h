@@ -22,4 +22,3 @@ Arenarray Arenarray_new(uint32_t bucket_size);
 Arena* Arenarray_arena_with_space(Arenarray* arenarray);
 MemBlock* Arenarray_find_mem_block(Arenarray* arenarray);
 MemBlock* Arenarray_free_memblock(Arenarray* arenarray, Arena* arena);
-Arenarray Arenarray_remove(Arenarray* arenarray, Arena* arena);

@@ -45,14 +45,14 @@ void* gmalloc(size_t size) {
     return NULL;
   }
 
-  if (metadata.arenas[bucket_index] == NULL) {
-    /* metadata.arenas[bucket_index] = Arena_create( */
-    /*     bucket_size_from_index(bucket_index), FIRST_ARENA_PAGES_QTY); */
+  if (!metadata.arenas_created[bucket_index]) {
+    metadata.arenas[bucket_index] = Arenarray_new(bucket_size_from_index(bucket_index));
+    metadata.arenas_created[bucket_index] = true;
   }
 
-  Arena* arena = metadata.arenas[bucket_index];
+  Arenarray* arenarray = &metadata.arenas[bucket_index];
 
-  MemBlock* mem_block = Arena_get_mem_block(arena);
+  MemBlock* mem_block = Arenarray_find_mem_block(arenarray);
 
   if (mem_block == NULL) {
     log_error("Couldn't find a suitable mem_block for size");
