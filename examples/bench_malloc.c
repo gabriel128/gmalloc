@@ -6,7 +6,7 @@
 
 
 /* #define ALLOC_SIZE 1<<26 */
-#define ALLOC_SIZE 100000000
+#define ALLOC_SIZE 130000000
 
 long get_mem_usage() {
     struct rusage usage;
@@ -35,6 +35,33 @@ void get_mem(int* currVirtMem) {
     fclose(file);
 }
 
+void reusing_freed_bench() {
+    printf("============================= \n");
+    printf("Reusing Freed memory Bench \n");
+
+    long long iter = 300000;
+    static int* allocs[500];
+
+    long init_mem = get_mem_usage();
+    clock_t start_time = clock();
+
+    for (int j = 0; j < iter; j++) {
+        for(int i = 0; i < 500; i++) {
+          allocs[i] = malloc(8);
+          *allocs[i] = 42;
+        }
+
+        for(int i = 0; i < 500; i++) {
+          free(allocs[i]);
+        }
+    }
+
+    long after_free_mem = get_mem_usage();
+    double elapsed_time = (double)(clock() - start_time) / CLOCKS_PER_SEC;
+    printf("============================= \n");
+    printf("Result => Time: %f,  Mem usage: %lf MB \n", elapsed_time, (double)(after_free_mem - init_mem) / 1024);
+    printf("============================= \n");
+}
 
 void single_thread_mixed_freeing_bench() {
     printf("============================= \n");
@@ -47,9 +74,9 @@ void single_thread_mixed_freeing_bench() {
 
     for (int i = 0; i < ALLOC_SIZE; i++) {
       allocs[i] = malloc(8);
-      memset(allocs[i], 1, 8);
-      if (i > 1000) {
-          free(allocs[i-1000]);
+      *allocs[i] = 42;
+      if (i > 500) {
+          free(allocs[i-500]);
       }
     }
 
@@ -177,6 +204,8 @@ void multi_thread_bench() {
 int main() {
     /* single_thread_allatonce_bench(); */
     /* multi_thread_bench(); */
-    single_thread_mixed_freeing_bench();
+    /* single_thread_mixed_freeing_bench(); */
+    reusing_freed_bench();
+
     return 0;
 }

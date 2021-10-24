@@ -32,8 +32,6 @@ size_t find_bucket_index(size_t size) {
 size_t bucket_size_from_index(size_t index) { return 1 << (index + 3); }
 
 void* gmalloc(size_t size) {
-  log_debug("[gmalloc] for size %zu\n", size);
-
   if (size == 0) {
     return NULL;
   }
@@ -59,16 +57,13 @@ void* gmalloc(size_t size) {
     log_error("Couldn't find a suitable mem_block for size");
     return NULL;
   } else {
-    assert((uintptr_t)mem_block->data % 8 == 0);
-    log_debug("[gmalloc] returing ptr %p\n", mem_block->data);
+    assert((uintptr_t)mem_block->data % 16 == 0);
 
     return (void*)mem_block->data;
   }
 }
 
 int gfree(void* ptr) {
-  log_debug("[gfree] ptr %p\n", ptr);
-
   MemBlock* mem_block = (MemBlock*)((byte*)ptr - sizeof(MemBlock));
   ArenaHeader header = mem_block->arena->header;
   uint32_t bucket_size = header.bucket_size;

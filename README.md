@@ -81,38 +81,40 @@ This gives an aprox. measurment on how it performs with lots of allocations
        149,810,589      cache-references:u        #    9.311 M/sec                  
          4,828,378      cache-misses:u            #    3.223 % of all cache refs    (this is nuts! still, it's slower)
 
-### Single thread 3GB of mix of allocations and freeing, trying to emulate something similar to a real application
-    This will use the free stack data structure for reusing memory
+### Single thread reusing memory on a 300k of iterations 500 allocations
+    This will use the free stack data structure heavily for reusing memory
     
 **gmalloc**
 
-    RSS Max Mem usage: 759.210938 MB
+    RSS Max Mem usage: Mem usage: 0.000000 MB
 
-    Time (mean ± σ):      3.369 s ±  0.055 s    [User: 3.157 s, System: 0.210 s]
-    Range (min … max):    3.337 s …  3.485 s    10 runs
+    Time (mean ± σ):      3.283 s ±  0.040 s    [User: 3.279 s, System: 0.002 s]
+    Range (min … max):    3.242 s …  3.390 s    10 runs
 
-     8,249,264,225      branches:u                #    2.475 G/sec                  
-           497,289      branch-misses:u           #    0.01% of all branches        
+     7,652,446,176      branches:u                #    2.343 G/sec                  
+           913,403      branch-misses:u           #    0.01% of all branches        
                  0      context-switches:u        #    0.000 /sec                   
-           195,384      page-faults:u             #   58.628 K/sec                  
-          3,332.61 msec task-clock:u              #    1.000 CPUs utilized          
-    10,721,740,619      cycles:u                  #    3.217 GHz                    
-    30,449,884,450      instructions:u            #    2.84  insn per cycle         
-           914,920      cache-references:u        #  274.535 K/sec                  
-            25,202      cache-misses:u            #    2.755 % of all cache refs
+                65      page-faults:u             #   19.904 /sec                   
+          3,265.66 msec task-clock:u              #    1.000 CPUs utilized          
+    11,315,543,351      cycles:u                  #    3.465 GHz                    
+    35,106,235,884      instructions:u            #    3.10  insn per cycle         
+            10,878      cache-references:u        #    3.331 K/sec                  
+             4,576      cache-misses:u            #   42.067 % of all cache refs    
+
 
 **malloc (for comparison)**
-    RSS Max Mem usage: 759.179688 MB
+    Mem usage: 0.000000 MB 
 
-    Time (mean ± σ):      1.706 s ±  0.004 s    [User: 1.488 s, System: 0.216 s]
-    Range (min … max):    1.700 s …  1.713 s    10 runs
+    Time (mean ± σ):      2.740 s ±  0.037 s    [User: 2.737 s, System: 0.002 s]
+    Range (min … max):    2.700 s …  2.824 s    10 runs
 
-     4,000,257,324      branches:u                #    2.337 G/sec                  
-           109,255      branch-misses:u           #    0.00% of all branches        
+     6,970,260,652      branches:u                #    2.529 G/sec                  
+           936,031      branch-misses:u           #    0.01% of all branches        
                  0      context-switches:u        #    0.000 /sec                   
-           195,388      page-faults:u             #  114.171 K/sec                  
-          1,711.37 msec task-clock:u              #    1.000 CPUs utilized          
-     5,046,017,714      cycles:u                  #    2.949 GHz                    
-    17,500,512,166      instructions:u            #    3.47  insn per cycle         
-         1,129,714      cache-references:u        #  660.124 K/sec                  
-             8,130      cache-misses:u            #    0.720 % of all cache refs
+                65      page-faults:u             #   23.581 /sec                   
+          2,756.50 msec task-clock:u              #    1.000 CPUs utilized          
+     9,483,908,726      cycles:u                  #    3.441 GHz                    
+    31,493,100,934      instructions:u            #    3.32  insn per cycle         
+            28,261      cache-references:u        #   10.252 K/sec                  
+            10,944      cache-misses:u            #   38.725 % of all cache refs    
+

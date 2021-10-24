@@ -39,7 +39,7 @@ bool FreeStack_destroy(FreeStack* stack) {
   }
 }
 
-bool FreeStack_push(FreeStack* stack, byte* mem_address) {
+inline __attribute__((always_inline)) bool FreeStack_push(FreeStack* stack, byte* mem_address) {
   if (stack == NULL) {
     return false;
   }
@@ -55,7 +55,7 @@ bool FreeStack_push(FreeStack* stack, byte* mem_address) {
   return true;
 }
 
-PtrResult FreeStack_pop(FreeStack* stack) {
+inline __attribute__((always_inline)) PtrResult FreeStack_pop(FreeStack* stack) {
   if (stack == NULL) {
     return PTR_ERR("Null stack");
   }

@@ -52,13 +52,13 @@ void* next_available_block_position(Arena* arena) {
   return (arena->blocks + (sizeof(MemBlock) + header.bucket_size) * header.len);
 }
 
-static MemBlock* try_from_free_stack(FreeStack* free_stack) {
+static inline MemBlock* try_from_free_stack(FreeStack* free_stack) {
   if (free_stack->len == 0)
     return NULL;
 
   PtrResult mem_block_res = FreeStack_pop(free_stack);
 
-  if (IS_ERR(mem_block_res)) {
+  if (UNLIKELY(IS_ERR(mem_block_res))) {
     log_error("[Arena_get_mem_block] Error on poping free_stack");
     return NULL;
   }
@@ -68,7 +68,7 @@ static MemBlock* try_from_free_stack(FreeStack* free_stack) {
 
 // Returns NULL when no more mem_block availables
 MemBlock* Arena_get_mem_block(Arena* arena) {
-  if (arena->free_stack != NULL) {
+  if (arena->free_stack) {
     MemBlock* mem_block = try_from_free_stack(arena->free_stack);
 
     if (mem_block) {
