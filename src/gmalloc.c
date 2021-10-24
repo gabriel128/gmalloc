@@ -46,8 +46,8 @@ void* gmalloc(size_t size) {
   }
 
   if (metadata.arenas[bucket_index] == NULL) {
-    metadata.arenas[bucket_index] = Arena_create(
-        bucket_size_from_index(bucket_index), FIRST_ARENA_PAGES_QTY);
+    /* metadata.arenas[bucket_index] = Arena_create( */
+    /*     bucket_size_from_index(bucket_index), FIRST_ARENA_PAGES_QTY); */
   }
 
   Arena* arena = metadata.arenas[bucket_index];

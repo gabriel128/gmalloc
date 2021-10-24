@@ -1,6 +1,8 @@
 #include "../src/gmalloc.h"
 #include <sys/resource.h>
 
+#define ALLOC_SIZE 100000000
+
 long get_mem_usage() {
     struct rusage usage;
 
@@ -28,29 +30,24 @@ void get_mem(int* currVirtMem) {
 
 
 int main() {
-    /* int init_mem; */
-    /* get_mem(&init_mem); */
+    static int* allocs[ALLOC_SIZE];
+
     long init_mem = get_mem_usage();
+    clock_t start_time = clock();
 
-    for (int i = 0; i < 10000000; i++) {
-      int* a = gmalloc(8);
-      /* *a = 4; */
-      memset(a, 1, 8);
-      /* printf("a is %d i is %d \n", *a, i); */
+    for (int i = 0; i < ALLOC_SIZE; i++) {
+      allocs[i] = gmalloc(8);
     }
-    /* memset(x, 1, 8); */
-    /* *x = 0xFFFFFFFF; */
-    /* gfree(x); */
 
-    /* int after_free_mem; */
-    /* get_mem(&after_free_mem); */
-
-    long after_free_mem = get_mem_usage();
-    printf("Mem usage: %ld MB\n", (after_free_mem - init_mem) / 1024^2);
-/* ./bin/example  0.26s user 0.54s system 60% cpu 1.333 total */
+    for (int i = 0; i < ALLOC_SIZE; i++) {
+      *allocs[i] = 42;
+    }
 
 
-    /* while(1); */
+    printf("alloc is %d \n", *allocs[1000]);
+    /* for (int i = 0; i < ALLOC_SIZE/2; i++) { */
+    /*   gfree(allocs[i]); */
+    /* } */
 
     return 0;
 }
