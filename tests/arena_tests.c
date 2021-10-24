@@ -95,73 +95,51 @@ Test(arena_tests, can_allocate_capacity8) {
     cr_assert_null(block);
 }
 
-/* Test(arena_tests, freeing_on_arena) { */
-/*     Arena* arena = Arena_create(8, 1, 0); */
-/*     MemBlock* block = Arena_get_mem_block(arena); */
-/*     bool succeeded = Arena_free_mem_block(block); */
+Test(arena_tests, freeing_on_arena) {
+    Arena* arena = Arena_create(8, 1, 0);
+    MemBlock* block = Arena_get_mem_block(arena);
+    bool succeeded = Arena_free_mem_block(block);
 
-/*     cr_assert(succeeded); */
-/*     cr_assert_eq(arena->free_stack->len, 1); */
-/* } */
+    cr_assert(succeeded);
+    cr_assert_eq(arena->free_stack->len, 1);
+}
 
-/* Test(arena_tests, freeing_on_nonhead_arena_destroys_arena, .signal = SIGSEGV) { */
-/*     Arena* arena = Arena_create(PAGE_SIZE/2, 1); */
-/*     cr_assert_not_null(arena); */
+Test(arena_tests, freeing_multiple_on_arena) {
+    Arena* arena = Arena_create(8, 1, 0);
+    MemBlock* block = Arena_get_mem_block(arena);
+    MemBlock* block2 = Arena_get_mem_block(arena);
+    bool succeeded = Arena_free_mem_block(block);
 
-/*     MemBlock* block1 = Arena_get_mem_block(arena); */
-/*     MemBlock* block2 = Arena_get_mem_block(arena); */
+    cr_assert(succeeded);
 
-/*     cr_assert_neq(block1->arena, block2->arena); */
-/*     cr_assert_not_null(arena->next_arena); */
-/*     cr_assert_eq(arena, block2->arena->prev_arena); */
-/*     cr_assert_eq(arena->next_arena, block2->arena); */
+    bool succeeded2 = Arena_free_mem_block(block);
 
-/*     bool succeeded = Arena_free_mem_block(block2); */
-/*     cr_assert(succeeded); */
-/*     cr_assert_null(arena->next_arena); */
+    cr_assert(succeeded2);
+    cr_assert_eq(arena->free_stack->len, 2);
+}
 
-/*     // Should segfault since if was unmapped */
-/*     *(int*)block2->data = 4; */
-/* } */
+Test(arena_tests, alloc_and_freeing_multiple_will_reuse_mem) {
+    Arena* arena = Arena_create(8, 1, 0);
+    MemBlock* block = Arena_get_mem_block(arena);
+    bool succeeded = Arena_free_mem_block(block);
 
-/* Test(arena_tests, freeing_on_non_head_non_tail_arena, .signal = SIGSEGV) { */
-/*     Arena* arenas_head = Arena_create(PAGE_SIZE/2+1, 1); */
-/*     cr_assert_not_null(arenas_head); */
+    cr_assert(succeeded);
 
-/*     MemBlock* block1 = Arena_get_mem_block(arenas_head); */
-/*     MemBlock* block2 = Arena_get_mem_block(arenas_head); */
-/*     MemBlock* block2b = Arena_get_mem_block(arenas_head); */
+    MemBlock* block2 = Arena_get_mem_block(arena);
+    bool succeeded2 = Arena_free_mem_block(block);
 
-/*     for(int i = 0; i < ARENA_LINEAR_GROWTH+2; i++) */
-/*         Arena_get_mem_block(arenas_head); */
+    cr_assert(succeeded2);
+    cr_assert_eq(arena->free_stack->len, 1);
+    cr_assert_eq(block2->data, block->data);
+}
 
-/*     MemBlock* block3 = Arena_get_mem_block(arenas_head); */
+Test(arena_tests, returns_false_when_trying_to_free_more_than_available) {
+    Arena* arena = Arena_create(8, 1, 0);
+    MemBlock* block = Arena_get_mem_block(arena);
+    bool succeeded = Arena_free_mem_block(block);
 
-/*     cr_assert_neq(block1->arena, block2->arena); */
-/*     cr_assert_eq(block2->arena, block2b->arena); */
-/*     cr_assert_neq(block1->arena, block3->arena); */
-/*     cr_assert_neq(block2->arena, block3->arena, "block2->arena is %p, block3 arena is %p \n", */
-/*                   block2->arena, block3->arena); */
+    cr_assert(succeeded);
+    bool succeeded2 = Arena_free_mem_block(block);
 
-/*     cr_assert_eq(arenas_head->prev_arena, NULL); */
-/*     cr_assert_eq(arenas_head->next_arena, block2->arena); */
-
-/*     cr_assert_eq(block2->arena->prev_arena, block1->arena); */
-/*     cr_assert_eq(block2->arena->next_arena, block3->arena); */
-
-/*     cr_assert_eq(block3->arena->prev_arena, block2->arena); */
-/*     cr_assert_eq(block3->arena->next_arena, NULL); */
-
-/*     // Destroying the middle Arena */
-/*     bool succeeded = Arena_free_mem_block(block3); */
-/*     cr_assert(succeeded); */
-
-/*     cr_assert_eq(arenas_head->prev_arena, NULL); */
-/*     cr_assert_eq(arenas_head->next_arena, block2->arena); */
-
-/*     cr_assert_eq(block2->arena->prev_arena, block1->arena); */
-/*     cr_assert_eq(block2->arena->next_arena, NULL); */
-
-/*     // Segfault when setting data on unmapped memory */
-/*     *(int*)block3->data = 4; */
-/* } */
+    cr_assert(!succeeded2);
+}

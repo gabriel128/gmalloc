@@ -2,7 +2,8 @@
 
 #define ARENAS_QTY 100000
 
-Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages, uint8_t arenarray_index) {
+Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages,
+                    uint8_t arenarray_index) {
   if (bucket_size > (PAGE_SIZE / 2 + 1)) {
     log_error("[Arena_create] can't allocate more than %d", PAGE_SIZE / 2 + 1);
     perror("Max allowed size\n");
@@ -72,8 +73,9 @@ MemBlock* Arena_get_mem_block(Arena* arena) {
   if (arena->free_stack != NULL) {
     MemBlock* mem_block = try_from_free_stack(arena->free_stack);
 
-    if (mem_block != NULL)
+    if (mem_block) {
       return mem_block;
+    }
   }
 
   ArenaHeader* header = &arena->header;
@@ -92,34 +94,24 @@ MemBlock* Arena_get_mem_block(Arena* arena) {
 
 // NOTE: Double freeing a memory block is undefined behaviour
 // (for now)
+// It returns true if the memory has been added to the stack
+// or false if the stack is full
 bool Arena_free_mem_block(MemBlock* block) {
-  if (block == NULL) {
+  if (!block) {
     return false;
   }
 
   Arena* arena = block->arena;
 
-  if (arena->free_stack == NULL) {
+  if (!arena->free_stack) {
     arena->free_stack = FreeStack_new(arena->header.mem_pages);
-
-    if (arena->header.capacity > arena->free_stack->capacity)
-      log_error(
-          "[Arena_create] Arena capacity is bigger than the free_stack can "
-          "support");
   }
 
   FreeStack* free_stack = arena->free_stack;
 
-  bool all_arena_blocks_freed = (free_stack->len + 1) == arena->header.len;
-
-  // We always keep the head alive
-  if (all_arena_blocks_freed) {
-    // TODO
-    /* return Arenarray_remove(arena); */
-
-    return NULL;
+  if (free_stack->len == arena->header.len) {
+    return false;
   } else {
     return FreeStack_push(free_stack, (byte*)block);
   }
 }
-
