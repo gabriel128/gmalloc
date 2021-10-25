@@ -9,6 +9,7 @@
 typedef struct Arena Arena;
 
 typedef struct ArenaHeader {
+  FreeStack* free_stack;
   size_t capacity;
   size_t len;
   uint32_t bucket_size;
@@ -22,8 +23,7 @@ typedef struct MemBlockCache {
 } MemBlockCache;
 
 typedef struct MemBlock {
-  Arena* arena;
-  MemBlockCache cache;
+  ArenaHeader* arena_header;
   byte data[];
 } MemBlock;
 
@@ -43,4 +43,4 @@ typedef struct FreeResult {
 Arena* Arena_create(uint32_t, uint32_t, uint8_t);
 bool Arena_destroy(Arena*);
 MemBlock* Arena_get_mem_block(Arena*);
-FreeResult Arena_free_mem_block(MemBlock*);
+FreeResult Arena_free_mem_block(MemBlock* block);

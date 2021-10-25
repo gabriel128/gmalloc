@@ -85,7 +85,7 @@ Test(arenarray_tests, full_is_false_after_freeing_mem) {
 
     cr_assert(arenarray.arenas[0].is_full);
 
-    bool ok = Arenarray_free_memblock(&arenarray, saved_block, saved_block->arena->header.arenarray_index);
+    bool ok = Arenarray_free_memblock(&arenarray, saved_block);
 
     cr_assert(ok);
     cr_assert(!arenarray.arenas[0].is_full);
@@ -101,15 +101,15 @@ Test(arenarray_tests, removes_arena_if_its_empty_and_not_the_first_one) {
       cr_assert_not_null(block);
 
       *(int*)block->data = i;
-      cr_assert_eq(arenarray.arenas[0].arena, block->arena);
+      cr_assert_eq(&arenarray.arenas[0].arena->header, block->arena_header);
     }
 
     MemBlock* block = Arenarray_find_mem_block(&arenarray);
     cr_assert_not_null(block);
 
-    cr_assert_eq(block->arena->header.arenarray_index, 1);
+    cr_assert_eq(block->arena_header->arenarray_index, 1);
 
-    bool ok = Arenarray_free_memblock(&arenarray, block, block->arena->header.arenarray_index);
+    bool ok = Arenarray_free_memblock(&arenarray, block);
     cr_assert(ok);
     cr_assert(!arenarray.arenas[1].is_full);
     cr_assert_null(arenarray.arenas[1].arena);
@@ -125,7 +125,7 @@ Test(arenarray_tests, doesnot_remove_the_first_one_if_is_empty) {
 
     *(int*)block->data = 42;
 
-    bool ok = Arenarray_free_memblock(&arenarray, block, block->arena->header.arenarray_index);
+    bool ok = Arenarray_free_memblock(&arenarray, block);
 
     cr_assert(ok);
 

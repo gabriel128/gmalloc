@@ -61,12 +61,13 @@ MemBlock* Arenarray_find_mem_block(Arenarray* arenarray) {
   }
 }
 
-bool Arenarray_remove_arena(Arenarray* arenarray, Arena* arena) {
-  uint8_t index = arena->header.arenarray_index;
+static inline bool Arenarray_remove_arena(Arenarray* arenarray, uint8_t index) {
   // We dont' destroy the first arena
-  if (index == 0) {
+  if (index == 0 || index == 1 || index == 2) {
     return true;
   }
+
+  Arena* arena = arenarray->arenas[index].arena;
 
   arenarray->arenas[index].arena = NULL;
   arenarray->arenas[index].is_full = false;
@@ -74,14 +75,16 @@ bool Arenarray_remove_arena(Arenarray* arenarray, Arena* arena) {
   return Arena_destroy(arena);
 }
 
-bool Arenarray_free_memblock(Arenarray* arenarray, MemBlock* block, uint8_t index) {
+bool Arenarray_free_memblock(Arenarray* arenarray, MemBlock* block) {
+  uint8_t index = block->arena_header->arenarray_index;
+
   FreeResult result = Arena_free_mem_block(block);
 
   if (result.success && result.free_stack_state == FREE_STACK_HAS_SPACE) {
     arenarray->arenas[index].is_full = false;
     return true;
   } else if (result.success && result.free_stack_state == FREE_STACK_FULL) {
-    return Arenarray_remove_arena(arenarray, block->arena);
+    return Arenarray_remove_arena(arenarray, index);
   } else {
     return false;
   }

@@ -6,7 +6,7 @@
 
 
 /* #define ALLOC_SIZE 1<<26 */
-#define ALLOC_SIZE 130000000
+#define ALLOC_SIZE 100000000
 
 long get_mem_usage() {
     struct rusage usage;
@@ -39,19 +39,22 @@ void reusing_freed_bench() {
     printf("============================= \n");
     printf("Reusing Freed memory Bench \n");
 
-    long long iter = 300000;
+    printf("============================= \n");
+    printf("Reusing Freed memory Bench \n");
+
+    long long iter = 1000000;
     static int* allocs[500];
 
     long init_mem = get_mem_usage();
     clock_t start_time = clock();
 
     for (int j = 0; j < iter; j++) {
-        for(int i = 0; i < 500; i++) {
+        for(int i = 0; i < 300; i++) {
           allocs[i] = malloc(8);
           *allocs[i] = 42;
         }
 
-        for(int i = 0; i < 500; i++) {
+        for(int i = 0; i < 300; i++) {
           free(allocs[i]);
         }
     }
@@ -202,10 +205,10 @@ void multi_thread_bench() {
 }
 
 int main() {
-    /* single_thread_allatonce_bench(); */
+    single_thread_allatonce_bench();
     /* multi_thread_bench(); */
     /* single_thread_mixed_freeing_bench(); */
-    reusing_freed_bench();
+    /* reusing_freed_bench(); */
 
     return 0;
 }

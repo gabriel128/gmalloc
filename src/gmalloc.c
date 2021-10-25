@@ -65,13 +65,13 @@ void* gmalloc(size_t size) {
 
 int gfree(void* ptr) {
   MemBlock* mem_block = (MemBlock*)((byte*)ptr - sizeof(MemBlock));
+  ArenaHeader* header = mem_block->arena_header;
 
-  uint32_t bucket_size = mem_block->cache.bucket_size;
-  uint32_t index = mem_block->cache.arenarray_index;
+  uint32_t bucket_size = header->bucket_size;
 
   Arenarray* arenarray = &metadata.arenas[find_bucket_index(bucket_size)];
 
-  bool freed = Arenarray_free_memblock(arenarray, mem_block, index);
+  bool freed = Arenarray_free_memblock(arenarray, mem_block);
 
   if (!freed) {
     log_error("Memory couldn't be freed");
