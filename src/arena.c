@@ -26,7 +26,7 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages,
 
   arena_header->capacity =
       calculate_capacity((byte*)arena_header, mem_pages, arena->blocks,
-                         sizeof(Arena*) + bucket_size);
+                         sizeof(MemBlock) + bucket_size);
 
   return arena;
 }
@@ -81,6 +81,8 @@ MemBlock* Arena_get_mem_block(Arena* arena) {
   if (header->len < header->capacity) {
     MemBlock* block = (MemBlock*)next_available_block_position(arena);
     block->arena = arena;
+    block->cache.arenarray_index = header->arenarray_index;
+    block->cache.bucket_size = header->bucket_size;
 
     header->len++;
 
@@ -92,28 +94,26 @@ MemBlock* Arena_get_mem_block(Arena* arena) {
 
 // NOTE: Double freeing a memory block is undefined behaviour
 // (for now)
-// It returns true if the memory has been added to the stack
-// or false if the stack is full
 FreeResult Arena_free_mem_block(MemBlock* block) {
-  if (!block) {
+  if (UNLIKELY(!block)) {
     return (FreeResult){false, UNKOWN};
   }
 
   Arena* arena = block->arena;
+  ArenaHeader header = arena->header;
+
+  uint32_t header_len = header.len;
 
   if (!arena->free_stack) {
-    arena->free_stack = FreeStack_new(arena->header.mem_pages);
+    arena->free_stack = FreeStack_new(header.mem_pages);
   }
-
   FreeStack* free_stack = arena->free_stack;
 
-  if (free_stack->len >= arena->header.len) {
+  if (free_stack->len >= header_len) {
     return (FreeResult){false, FREE_STACK_FULL};
   } else {
     bool ok = FreeStack_push(free_stack, (byte*)block);
-    FreeStackState free_stack_state = free_stack->len == arena->header.len
-                                          ? FREE_STACK_FULL
-                                          : FREE_STACK_HAS_SPACE;
+    FreeStackState free_stack_state = free_stack->len == header_len ? FREE_STACK_FULL : FREE_STACK_HAS_SPACE;
 
     return (FreeResult){ok, free_stack_state};
   }

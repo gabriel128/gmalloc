@@ -9,12 +9,15 @@ void test_multiple_allocations(size_t size, size_t addr_diff) {
 
     for(int i = 0; i < 10; i++) {
         mems[i] = gmalloc(size);
+        uintptr_t this_addr = (uintptr_t) mems[i];
+
+        cr_assert_eq(this_addr % 8, 0);
+
         cr_assert_not_null(mems[i]);
         *mems[i] = 1;
 
         if (i > 0) {
             uintptr_t prev_addr = (uintptr_t) mems[i-1];
-            uintptr_t this_addr = (uintptr_t) mems[i];
 
             cr_assert_eq(this_addr, prev_addr+addr_diff+sizeof(MemBlock));
         }

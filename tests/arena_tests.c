@@ -9,6 +9,8 @@ Test(arena_tests, eight_byte_bucket_creation) {
     printf("ArenaHeader size %zu \n", sizeof(ArenaHeader));
     printf("Arena size %zu \n", sizeof(Arena));
     printf("FreeResult size %zu \n", sizeof(FreeResult));
+    printf("MemblockCache size %zu \n", sizeof(MemBlockCache));
+    printf("Memblock size %zu \n", sizeof(MemBlock));
 
     Arena* arena = Arena_create(8, 1, 0);
 
@@ -20,7 +22,7 @@ Test(arena_tests, eight_byte_bucket_creation) {
     cr_assert_eq(header.bucket_size, 8);
     cr_assert_eq(header.mem_pages, 1);
     cr_assert_eq(header.len, 0);
-    cr_assert_eq(header.capacity, 253, "Capacity is %zu \n", header.capacity);
+    cr_assert_eq(header.capacity, 169, "Capacity is %zu \n", header.capacity);
 }
 
 Test(arena_tests, eight_byte_multiple_pages_bucket_creation) {
@@ -37,7 +39,7 @@ Test(arena_tests, eight_byte_multiple_pages_bucket_creation) {
     cr_assert_eq(header.bucket_size, 8);
     cr_assert_eq(header.mem_pages, 2);
     cr_assert_eq(header.len, 0);
-    cr_assert_eq(header.capacity, 509, "Capacity is %zu \n", header.capacity);
+    cr_assert_eq(header.capacity, 339, "Capacity is %zu \n", header.capacity);
 }
 
 
@@ -52,7 +54,7 @@ Test(arena_tests, sixteen_byte_bucket_creation) {
     cr_assert_eq(header.bucket_size, 16);
     cr_assert_eq(header.mem_pages, 1);
     cr_assert_eq(header.len, 0);
-    cr_assert_eq(header.capacity, 169, "Capacity is %zu \n", header.capacity);
+    cr_assert_eq(header.capacity, 126, "Capacity is %zu \n", header.capacity);
 }
 
 Test(arena_tests, get_mem_blocks_between_capacity_8) {

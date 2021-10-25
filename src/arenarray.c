@@ -74,12 +74,7 @@ bool Arenarray_remove_arena(Arenarray* arenarray, Arena* arena) {
   return Arena_destroy(arena);
 }
 
-bool Arenarray_free_memblock(Arenarray* arenarray, MemBlock* block,
-                             uint8_t index) {
-  if (!block) {
-    return false;
-  }
-
+bool Arenarray_free_memblock(Arenarray* arenarray, MemBlock* block, uint8_t index) {
   FreeResult result = Arena_free_mem_block(block);
 
   if (result.success && result.free_stack_state == FREE_STACK_HAS_SPACE) {

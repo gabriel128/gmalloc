@@ -16,8 +16,14 @@ typedef struct ArenaHeader {
   uint8_t arenarray_index;
 } ArenaHeader;
 
+typedef struct MemBlockCache {
+  uint32_t bucket_size;
+  uint8_t arenarray_index;
+} MemBlockCache;
+
 typedef struct MemBlock {
   Arena* arena;
+  MemBlockCache cache;
   byte data[];
 } MemBlock;
 
