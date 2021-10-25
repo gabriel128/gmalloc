@@ -80,5 +80,5 @@ typedef struct PtrResult {
 #define PTR_ERR(error) ((PtrResult){RESULT_ERR, {.err = error}})
 
 // Branch prediction helperes
-#define LIKELY(x)      __builtin_expect(!!(x), 1)
-#define UNLIKELY(x)    __builtin_expect(!!(x), 0)
+#define LIKELY(x) __builtin_expect(!!(x), 1)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)

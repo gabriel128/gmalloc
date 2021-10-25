@@ -55,7 +55,8 @@ inline __attribute__((always_inline)) bool FreeStack_push(FreeStack* stack, byte
   return true;
 }
 
-inline __attribute__((always_inline)) PtrResult FreeStack_pop(FreeStack* stack) {
+inline __attribute__((always_inline)) PtrResult
+FreeStack_pop(FreeStack* stack) {
   if (stack == NULL) {
     return PTR_ERR("Null stack");
   }

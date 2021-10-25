@@ -55,7 +55,6 @@ Test(arenarray_tests, returns_null_when_full) {
     Arenarray arenarray = Arenarray_new(8);
     Arena* arena = arenarray.arenas[0].arena;
 
-
     for(int i = 0; i < ARENARRAY_LEN; i++) {
         arenarray.arenas[i].is_full = true;
         arenarray.arenas[i].arena = arena;
@@ -130,5 +129,5 @@ Test(arenarray_tests, doesnot_remove_the_first_one_if_is_empty) {
     cr_assert(ok);
 
     cr_assert_not_null(arenarray.arenas[0].arena);
-    cr_assert_eq(arena->free_stack->len, 1);
+    cr_assert_eq(arena->header.free_stack->len, 1);
 }

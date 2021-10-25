@@ -16,14 +16,13 @@ Arena* Arena_create(uint32_t bucket_size, uint32_t mem_pages,
 
   Arena* arena = mem_zero_init(mem_pages);
   log_debug("Maping Arena %d \n", arenarray_index);
-  arena->free_stack = FreeStack_new(mem_pages);
 
   ArenaHeader* arena_header = &arena->header;
   arena_header->arenarray_index = arenarray_index;
   arena_header->bucket_size = bucket_size;
   arena_header->len = 0;
   arena_header->mem_pages = mem_pages;
-  arena_header->free_stack = arena->free_stack;
+  arena_header->free_stack = FreeStack_new(mem_pages);
 
   arena_header->capacity =
       calculate_capacity((byte*)arena_header, mem_pages, arena->blocks,
@@ -36,7 +35,7 @@ bool Arena_destroy(Arena* arena) {
   if (arena == NULL) {
     return false;
   }
-  bool free_stack_freed = FreeStack_destroy(arena->free_stack);
+  bool free_stack_freed = FreeStack_destroy(arena->header.free_stack);
   log_debug("Unmaping Arena %d \n", arena->header.arenarray_index);
   int err = munmap(arena, arena->header.mem_pages);
 
@@ -69,8 +68,8 @@ static inline MemBlock* try_from_free_stack(FreeStack* free_stack) {
 
 // Returns NULL when no more mem_block availables
 MemBlock* Arena_get_mem_block(Arena* arena) {
-  if (arena->free_stack) {
-    MemBlock* mem_block = try_from_free_stack(arena->free_stack);
+  if (arena->header.free_stack) {
+    MemBlock* mem_block = try_from_free_stack(arena->header.free_stack);
 
     if (mem_block) {
       return mem_block;
@@ -106,7 +105,8 @@ FreeResult Arena_free_mem_block(MemBlock* block) {
     return (FreeResult){false, FREE_STACK_FULL};
   } else {
     bool ok = FreeStack_push(free_stack, (byte*)block);
-    FreeStackState free_stack_state = free_stack->len == header.len ? FREE_STACK_FULL : FREE_STACK_HAS_SPACE;
+    FreeStackState free_stack_state =
+        free_stack->len == header.len ? FREE_STACK_FULL : FREE_STACK_HAS_SPACE;
 
     return (FreeResult){ok, free_stack_state};
   }

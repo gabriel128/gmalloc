@@ -49,12 +49,12 @@ void reusing_freed_bench() {
     clock_t start_time = clock();
 
     for (int j = 0; j < iter; j++) {
-        for(int i = 0; i < 300; i++) {
+        for(int i = 0; i < 500; i++) {
           allocs[i] = malloc(8);
           *allocs[i] = 42;
         }
 
-        for(int i = 0; i < 300; i++) {
+        for(int i = 0; i < 500; i++) {
           free(allocs[i]);
         }
     }
@@ -121,7 +121,7 @@ void single_thread_allatonce_bench() {
 }
 
 long* allocs_multi_tr[ALLOC_SIZE];
-const int threads_qty = ALLOC_SIZE/10000;
+const int threads_qty = 10;
 
 void* alloc_it(void *args)
 {
@@ -205,10 +205,10 @@ void multi_thread_bench() {
 }
 
 int main() {
-    single_thread_allatonce_bench();
+    /* single_thread_allatonce_bench(); */
     /* multi_thread_bench(); */
     /* single_thread_mixed_freeing_bench(); */
-    /* reusing_freed_bench(); */
+    reusing_freed_bench();
 
     return 0;
 }

@@ -29,7 +29,6 @@ typedef struct MemBlock {
 
 typedef struct Arena {
   ArenaHeader header;
-  FreeStack* free_stack;
   byte blocks[];
 } Arena;
 
