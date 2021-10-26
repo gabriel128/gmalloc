@@ -103,9 +103,11 @@ where it was designed for. Malloc is a general allocator, gmalloc is a special o
 This gives an aprox. measurment on how it performs with lots of allocations
 
 **gmalloc**
+```
   Max Mem used RSS: 2812.351562 MB
 
   Time (mean ± σ):      3.583 s ±  0.012 s    [User: 2.752 s, System: 0.825 s]
+  
   Range (min … max):    3.568 s …  3.600 s    10 runs
 
      6,642,470,688      branches:u                #    1.848 G/sec                  
@@ -122,8 +124,9 @@ This gives an aprox. measurment on how it performs with lots of allocations
 
        2.780703000 seconds user
        0.808085000 seconds sys
-
+```
 **malloc (for comparison)**
+```
   Max Mem used RSS: 3815.847656 MB 
 
   Time (mean ± σ):      4.499 s ±  0.032 s    [User: 3.546 s, System: 0.944 s]
@@ -138,12 +141,12 @@ This gives an aprox. measurment on how it performs with lots of allocations
     35,405,005,497      instructions:u            #    3.08  insn per cycle         
         31,493,856      cache-references:u        #    7.014 M/sec                  
         12,795,588      cache-misses:u            #   40.629 % of all cache refs    
-
+```
 
 ### Multi threaded allocations
 
 **gmalloc**
-
+```
   Max Mem usage: 1598.914062 MB
 
   Time (mean ± σ):      1.041 s ±  0.677 s    [User: 5.282 s, System: 1.165 s]
@@ -158,9 +161,10 @@ This gives an aprox. measurment on how it performs with lots of allocations
     15,942,304,423      instructions:u            #    1.60  insn per cycle         
         15,879,418      cache-references:u        #    4.138 M/sec                  
          3,842,544      cache-misses:u            #   24.198 % of all cache refs
+```
 
 **malloc (for comparison)**
-
+```
   Time (mean ± σ):      3.135 s ±  0.058 s    [User: 6.610 s, System: 5.676 s]
   Range (min … max):    3.077 s …  3.246 s    10 runs
 
@@ -173,12 +177,12 @@ This gives an aprox. measurment on how it performs with lots of allocations
     24,795,451,867      instructions:u            #    1.49  insn per cycle         
         54,106,631      cache-references:u        #    2.242 M/sec                  
          8,759,277      cache-misses:u            #   16.189 % of all cache refs
-
+```
 ### Single thread reusing memory on a 300k of iterations 500 allocations
     This will use the free stack data structure heavily for reusing memory
     
 **gmalloc**
-
+```
     RSS Max Mem usage: Mem usage: 0.000000 MB
 
     Time (mean ± σ):      9.854 s ±  0.077 s    [User: 9.845 s, System: 0.002 s]
@@ -193,10 +197,11 @@ This gives an aprox. measurment on how it performs with lots of allocations
    110,518,240,256      instructions:u            #    3.24  insn per cycle         
             25,597      cache-references:u        #    2.608 K/sec                  
              4,532      cache-misses:u            #   17.705 % of all cache refs    
-
+```
 
 
 **malloc (for comparison)**
+```
     Mem usage: 0.000000 MB 
 
     Time (mean ± σ):      9.131 s ±  0.230 s    [User: 9.125 s, System: 0.001 s]
@@ -212,6 +217,7 @@ This gives an aprox. measurment on how it performs with lots of allocations
             30,881      cache-references:u        #    3.444 K/sec                  
              5,340      cache-misses:u            #   17.292 % of all cache refs    
 
+```
 ### License
 
 MIT License
