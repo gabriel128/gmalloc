@@ -3,12 +3,29 @@
 GMalloc is a special allocator that aims to be memory efficient for 
 some memory sizes. In those cases it reduces fragmentation by using special buckets
 
+## Usage
+
+Import the library dynamically or statically as you please. And use `gmalloc` and `gfree` as you 
+would use `calloc` and `free`
+
+## Special Buckets creation [WIP]
+
+Given a struct `X` we can create a spcial bucket for it with the following macro
+```
+typedef struct X {
+ ...
+} X;
+
+GMALLOC_BUCKET(X)
+```
+if the memory is multiple of 8 bytes, it will use one of the predefined buckets
+
 ## Features
 
 - Reduced metadata on Allocations
 - Zero fragmentation on exact bucket sizes
 - Aligns memory on 8bytes
-- Cache efficient 
+- Designed with cache efficiency in mind
 - Lock free by using thread local arenas
 - Avoids false sharing by using thread local arenas
 - Blazingly fastish 
@@ -22,22 +39,60 @@ some memory sizes. In those cases it reduces fragmentation by using special buck
 Each thread contains a metadata data structure that looks like the following:
 
 ```
-GMetadata [ Arenarray for allocs of 8 bytes | Arenarray for allocs of 16 bytes | ... | Arenarray for allocs of 512 bytes]
+GMetadata = [ Arenarray for allocs of 8 bytes | Arenarray for allocs of 16 bytes | ... | Arenarray for allocs of 512 bytes]
 ```
 
 [WIP] Special allocations will live in a different metadata with ordered allocations
-GSpecialMetadata [ Arenarray for allocs 24 bytes | ... | Arenarray for bucket 240 bytes]
+
+```
+GSpecialMetadata = [ Arenarray for allocs 24 bytes | ... | Arenarray for bucket 240 bytes]
+```
+
 
 ### Arenarray (cool name aye!)
 
 As the name suggest an Arenarray consists of an array of arenas for certain bucket. Each arena sizes are defined here: [TODO add link]
-The idea is that the higher the index, the higher the memory used by the Arena. It also uses a bit of extra memory 
-to keep track of which arenas are full. Mostly for cache efficency when using lots of memory. 
-The original design used Arenas a linked lists (it was also elegant with recursion) and finding a free slots with high memory 
+The idea is that the higher the index, the higher the memory used by the Arena (it's aprox a linear grow of 10x to avoid 
+too many system calls). It also uses a bit of extra memory to keep track of which arenas are full. Mostly for cache efficency 
+when using lots of memory. 
+The original design used Arenas as a linked list (it was also elegant with recursion) and finding a free slots with high memory 
 usage was slow, mostly because it was using the cache poorly (checked with `perf record -e LLC-load-misses` and the L1 variant). 
 
+It looks like the following
 
-TODO
+```
+Arenarray = [ ArenaItem {full :: bool, arena :: Arena},  ..., ArenaItem {full :: bool, arena :: Arena}]
+```
+
+### Arena
+
+This is the main datastructure were the allocations are stored. It looks like the following:
+
+```
+Arena = { ArenaHeader, [MemBlock] }
+```
+
+where 
+
+```
+ArenaHeader = { FreeStack, metadata... }
+```
+and 
+
+```
+MemBlock = { ArenaHeader*, allocated_data }
+```
+
+### FreeStack
+
+The FreeStack is a stack data structure that stores memory freed by `gfree` and there is one per Arena. 
+Since the bucket is a fixed number on an arena, the size is also fixed and no free slots coalescing is needed as
+in other allocators.
+
+### MemBlock
+
+A MemBlock is stored in each allocation and a pointer to allocated_data is what `gmalloc` returns. 
+
 ## Benchmarks
 
 These are not by any means exhaustive and compares gmalloc on the special cases
@@ -156,3 +211,27 @@ This gives an aprox. measurment on how it performs with lots of allocations
    104,976,303,894      instructions:u            #    3.38  insn per cycle         
             30,881      cache-references:u        #    3.444 K/sec                  
              5,340      cache-misses:u            #   17.292 % of all cache refs    
+
+### License
+
+MIT License
+
+Copyright (c) 2021 
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
