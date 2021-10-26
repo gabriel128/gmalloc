@@ -18,17 +18,6 @@ void* mem_zero_init(int pages) {
   close(fd);
 
   return ptr;
-
-  /* void* segment = (byte*)mmap(NULL, PAGE_SIZE * pages, PROT_READ |
-   * PROT_WRITE, */
-  /*                             MAP_PRIVATE | MAP_ANONYMOUS, 0, 0); */
-
-  /* if (segment == MAP_FAILED) { */
-  /*   perror("Error on creating segment for FreeStack \n"); */
-  /*   exit(1); */
-  /* } */
-
-  /* return segment; */
 }
 
 void* mem_init(int pages) {

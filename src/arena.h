@@ -3,33 +3,43 @@
 #include "common.h"
 #include "free_stack.h"
 
-#define ARENA_LINEAR_GROWTH 3
+#define ARENA_LINEAR_GROWTH 2
+#define FIRST_ARENA_PAGES_QTY 10
 
 typedef struct Arena Arena;
 
 typedef struct ArenaHeader {
+  FreeStack* free_stack;
   size_t capacity;
   size_t len;
   uint32_t bucket_size;
   uint32_t mem_pages;
+  uint8_t arenarray_index;
 } ArenaHeader;
 
+typedef struct MemBlockCache {
+  uint32_t bucket_size;
+  uint8_t arenarray_index;
+} MemBlockCache;
+
 typedef struct MemBlock {
-  Arena* arena;
+  ArenaHeader* arena_header;
   byte data[];
 } MemBlock;
 
 typedef struct Arena {
   ArenaHeader header;
-  FreeStack* free_stack;
-  Arena* next_arena;
-  Arena* prev_arena;
   byte blocks[];
 } Arena;
 
-Arena* Arena_create(uint32_t, uint32_t);
-bool Arena_is_head(Arena*);
+typedef enum { FREE_STACK_HAS_SPACE, FREE_STACK_FULL, UNKOWN } FreeStackState;
+
+typedef struct FreeResult {
+  bool success;
+  FreeStackState free_stack_state;
+} FreeResult;
+
+Arena* Arena_create(uint32_t, uint32_t, uint8_t);
 bool Arena_destroy(Arena*);
 MemBlock* Arena_get_mem_block(Arena*);
-bool Arena_free_mem_block(MemBlock*);
-MemBlock* Arena_find_free_mem_block(Arena* head);
+FreeResult Arena_free_mem_block(MemBlock* block);

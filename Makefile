@@ -44,9 +44,9 @@ $(SO_TARGET): $(TARGET) $(OBJECTS)
 
 # Release build
 
-release: CFLAGS=-DNDEBUG -O3 -Wall -Wextra $(OPTFLAGS)
+release: CFLAGS=-DNDEBUG -O3 -march=native -Wall -Wextra $(OPTFLAGS)
 release: clean
-release: $(TARGET)
+release: $(TARGET) $(SO_TARGET)
 
 
 watch-tests: test
@@ -86,20 +86,20 @@ bin/example: release examples/main.c
 ## Benches
 bench: bin/bench
 
-bin/bench: CFLAGS+=-DNDEBUG
+bin/bench: CFLAGS+=-DNDEBUG -g
 bin/bench: release examples/bench.c
-	$(CC) -pthread $(CFLAGS) examples/bench.c -o $@ $(TARGET)
+	$(CC) -pthread examples/bench.c -o $@ $(TARGET)
 
 bench_perf: bin/bench_perf
 
 bin/bench_perf: CFLAGS+=-DNDEBUG
-bin/bench_perf: $(TARGET) examples/bench.c
+bin/bench_perf: $(SO_TARGET) $(TARGET) examples/bench.c
 	$(CC) -pthread $(CFLAGS) examples/bench.c -o $@ $(TARGET)
 
 bench_malloc: bin/bench_malloc
 
 bin/bench_malloc: release examples/bench_malloc.c
-	$(CC) -pthread $(CFLAGS) examples/bench_malloc.c -o $@ $(TARGET)
+	$(CC) -pthread $(CFLAGS) -g examples/bench_malloc.c -o $@ $(TARGET)
 
 ## INIT Project structure
 init:

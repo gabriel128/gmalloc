@@ -8,14 +8,14 @@
 Test(arena_tests, eight_byte_bucket_creation) {
     printf("ArenaHeader size %zu \n", sizeof(ArenaHeader));
     printf("Arena size %zu \n", sizeof(Arena));
-    printf("Offset of blocks %zu \n", offsetof(Arena, next_arena));
+    printf("FreeResult size %zu \n", sizeof(FreeResult));
+    printf("MemblockCache size %zu \n", sizeof(MemBlockCache));
+    printf("Memblock size %zu \n", sizeof(MemBlock));
 
-    Arena* arena = Arena_create(8, 1);
+    Arena* arena = Arena_create(8, 1, 0);
 
-    cr_assert_null(arena->free_stack);
+    cr_assert_not_null(arena->header.free_stack);
     cr_assert_not_null(arena);
-    cr_assert_null(arena->next_arena);
-    cr_assert_null(arena->prev_arena);
 
     ArenaHeader header = arena->header;
 
@@ -23,20 +23,16 @@ Test(arena_tests, eight_byte_bucket_creation) {
     cr_assert_eq(header.mem_pages, 1);
     cr_assert_eq(header.len, 0);
     cr_assert_eq(header.capacity, 253, "Capacity is %zu \n", header.capacity);
-
 }
 
 Test(arena_tests, eight_byte_multiple_pages_bucket_creation) {
     printf("ArenaHeader size %zu \n", sizeof(ArenaHeader));
     printf("Arena size %zu \n", sizeof(Arena));
-    printf("Offset of blocks %zu \n", offsetof(Arena, next_arena));
 
-    Arena* arena = Arena_create(8, 2);
+    Arena* arena = Arena_create(8, 2, 0);
 
-    cr_assert_null(arena->free_stack);
+    cr_assert_not_null(arena->header.free_stack);
     cr_assert_not_null(arena);
-    cr_assert_null(arena->next_arena);
-    cr_assert_null(arena->prev_arena);
 
     ArenaHeader header = arena->header;
 
@@ -44,28 +40,25 @@ Test(arena_tests, eight_byte_multiple_pages_bucket_creation) {
     cr_assert_eq(header.mem_pages, 2);
     cr_assert_eq(header.len, 0);
     cr_assert_eq(header.capacity, 509, "Capacity is %zu \n", header.capacity);
-
 }
 
 
 Test(arena_tests, sixteen_byte_bucket_creation) {
-    Arena* arena = Arena_create(16, 1);
+    Arena* arena = Arena_create(16, 1, 0);
 
-    cr_assert_null(arena->free_stack);
+    cr_assert_not_null(arena->header.free_stack);
     cr_assert_not_null(arena);
-    cr_assert_null(arena->next_arena);
-    cr_assert_null(arena->prev_arena);
 
     ArenaHeader header = arena->header;
 
     cr_assert_eq(header.bucket_size, 16);
     cr_assert_eq(header.mem_pages, 1);
     cr_assert_eq(header.len, 0);
-    cr_assert_eq(header.capacity, 168, "Capacity is %zu \n", header.capacity);
+    cr_assert_eq(header.capacity, 169, "Capacity is %zu \n", header.capacity);
 }
 
 Test(arena_tests, get_mem_blocks_between_capacity_8) {
-    Arena* arena = Arena_create(8, 1);
+    Arena* arena = Arena_create(8, 1, 0);
     ArenaHeader* header = &arena->header;
 
     MemBlock* block = Arena_get_mem_block(arena);
@@ -78,15 +71,15 @@ Test(arena_tests, get_mem_blocks_between_capacity_8) {
 
     cr_assert_eq(header->len, 2, "Len is %zu \n", header->len);
 
-    cr_assert_eq(block->arena, arena, "Block arena is %p, arena is %p\n", block->arena, arena);
+    cr_assert_eq(block->arena_header, &arena->header);
     cr_assert_eq(*(long*)block->data, 42, "Block data is %ld\n", *(long*)block->data);
 
-    cr_assert_eq(block2->arena, arena, "Block arena is %p, arena is %p\n", block2->arena, arena);
+    cr_assert_eq(block2->arena_header, &arena->header);
     cr_assert_eq(*(long*)block2->data, 43, "Block data is %ld\n", *(long*)block2->data);
 }
 
 Test(arena_tests, can_allocate_capacity8) {
-    Arena* arena = Arena_create(8, 1);
+    Arena* arena = Arena_create(8, 1, 0);
     ArenaHeader* header = &arena->header;
 
     for (int i = 0; i < (int)header->capacity; i++) {
@@ -96,86 +89,70 @@ Test(arena_tests, can_allocate_capacity8) {
       *(int*)block->data = i;
 
       cr_assert_eq((int)header->len, i+1, "Len is %zu \n", header->len);
-      cr_assert_eq(block->arena, arena, "Block arena is %p, arena is %p\n", block->arena, arena);
+      cr_assert_eq(block->arena_header, &arena->header);
       cr_assert_eq(*(int*)block->data, i, "Block data is %d\n", *(int*)block->data);
     }
 
-    // It doesn't create a new Arena
-    cr_assert_null(arena->next_arena);
-
-    // Creates new Arena
+    // Returns null when no more space
     MemBlock* block = Arena_get_mem_block(arena);
-    cr_assert_not_null(arena->next_arena);
+    cr_assert_null(block);
 }
 
-Test(arena_tests, freeing_on_head_arena_does_not_destroy_arena) {
-    Arena* arena = Arena_create(8, 1);
+Test(arena_tests, freeing_on_arena) {
+    Arena* arena = Arena_create(8, 1, 0);
     MemBlock* block = Arena_get_mem_block(arena);
-    bool succeeded = Arena_free_mem_block(block);
+    FreeResult result = Arena_free_mem_block(block);
 
-    cr_assert(succeeded);
-    cr_assert_eq(arena->free_stack->len, 1);
-    cr_assert_null(arena->next_arena);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_FULL);
+    cr_assert_eq(arena->header.free_stack->len, 1);
 }
 
-Test(arena_tests, freeing_on_nonhead_arena_destroys_arena, .signal = SIGSEGV) {
-    Arena* arena = Arena_create(PAGE_SIZE/2, 1);
-    cr_assert_not_null(arena);
-
-    MemBlock* block1 = Arena_get_mem_block(arena);
+Test(arena_tests, freeing_multiple_on_arena) {
+    Arena* arena = Arena_create(8, 1, 0);
+    MemBlock* block = Arena_get_mem_block(arena);
     MemBlock* block2 = Arena_get_mem_block(arena);
+    FreeResult result = Arena_free_mem_block(block);
 
-    cr_assert_neq(block1->arena, block2->arena);
-    cr_assert_not_null(arena->next_arena);
-    cr_assert_eq(arena, block2->arena->prev_arena);
-    cr_assert_eq(arena->next_arena, block2->arena);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_HAS_SPACE);
 
-    bool succeeded = Arena_free_mem_block(block2);
-    cr_assert(succeeded);
-    cr_assert_null(arena->next_arena);
+    FreeResult result2 = Arena_free_mem_block(block);
 
-    // Should segfault since if was unmapped
-    *(int*)block2->data = 4;
+    cr_assert(result2.success);
+    cr_assert(result2.free_stack_state == FREE_STACK_FULL);
+
+    cr_assert_eq(arena->header.free_stack->len, 2);
 }
 
-Test(arena_tests, freeing_on_non_head_non_tail_arena, .signal = SIGSEGV) {
-    Arena* arenas_head = Arena_create(PAGE_SIZE/2+1, 1);
-    cr_assert_not_null(arenas_head);
+Test(arena_tests, alloc_and_freeing_multiple_will_reuse_mem) {
+    Arena* arena = Arena_create(8, 1, 0);
+    MemBlock* block = Arena_get_mem_block(arena);
+    FreeResult result = Arena_free_mem_block(block);
 
-    MemBlock* block1 = Arena_get_mem_block(arenas_head);
-    MemBlock* block2 = Arena_get_mem_block(arenas_head);
-    MemBlock* block2b = Arena_get_mem_block(arenas_head);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_FULL);
 
-    for(int i = 0; i < ARENA_LINEAR_GROWTH+2; i++)
-        Arena_get_mem_block(arenas_head);
+    MemBlock* block2 = Arena_get_mem_block(arena);
+    FreeResult result2 = Arena_free_mem_block(block);
 
-    MemBlock* block3 = Arena_get_mem_block(arenas_head);
+    cr_assert(result2.success);
+    cr_assert(result2.free_stack_state == FREE_STACK_FULL);
 
-    cr_assert_neq(block1->arena, block2->arena);
-    cr_assert_eq(block2->arena, block2b->arena);
-    cr_assert_neq(block1->arena, block3->arena);
-    cr_assert_neq(block2->arena, block3->arena, "block2->arena is %p, block3 arena is %p \n",
-                  block2->arena, block3->arena);
+    cr_assert_eq(arena->header.free_stack->len, 1);
+    cr_assert_eq(block2->data, block->data);
+}
 
-    cr_assert_eq(arenas_head->prev_arena, NULL);
-    cr_assert_eq(arenas_head->next_arena, block2->arena);
+Test(arena_tests, returns_false_when_trying_to_free_more_than_available) {
+    Arena* arena = Arena_create(8, 1, 0);
+    MemBlock* block = Arena_get_mem_block(arena);
+    FreeResult result = Arena_free_mem_block(block);
 
-    cr_assert_eq(block2->arena->prev_arena, block1->arena);
-    cr_assert_eq(block2->arena->next_arena, block3->arena);
+    cr_assert(result.success);
+    cr_assert(result.free_stack_state == FREE_STACK_FULL);
 
-    cr_assert_eq(block3->arena->prev_arena, block2->arena);
-    cr_assert_eq(block3->arena->next_arena, NULL);
+    FreeResult result2 = Arena_free_mem_block(block);
 
-    // Destroying the middle Arena
-    bool succeeded = Arena_free_mem_block(block3);
-    cr_assert(succeeded);
-
-    cr_assert_eq(arenas_head->prev_arena, NULL);
-    cr_assert_eq(arenas_head->next_arena, block2->arena);
-
-    cr_assert_eq(block2->arena->prev_arena, block1->arena);
-    cr_assert_eq(block2->arena->next_arena, NULL);
-
-    // Segfault when setting data on unmapped memory
-    *(int*)block3->data = 4;
+    cr_assert(!result2.success);
+    cr_assert(result2.free_stack_state == FREE_STACK_FULL);
 }

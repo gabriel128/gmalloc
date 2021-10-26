@@ -1,17 +1,16 @@
 #pragma once
 
-#include "arena.h"
+#include "arenarray.h"
 #include "common.h"
 // Assumed 4kb pages for simplicity
 #define PAGE_SIZE 4096
-#define FIRST_ARENA_PAGES_QTY 50
+#define ARENAS_QTY 7
 
 typedef struct GMallocMetadata {
-  Arena* arenas[7];
+  Arenarray arenas[ARENAS_QTY];
+  bool arenas_created[ARENAS_QTY];
 } GMAllocMetadata;
 
-void gmalloc_init(int pages);
 void* gmalloc(size_t size);
 int gfree(void* ptr);
-void gdump();
 GMAllocMetadata* gmalloc_metadata();

@@ -35,6 +35,33 @@ void get_mem(int* currVirtMem) {
     fclose(file);
 }
 
+void reusing_freed_bench() {
+    printf("============================= \n");
+    printf("Reusing Freed memory Bench \n");
+
+    long long iter = 1000000;
+    static int* allocs[500];
+
+    long init_mem = get_mem_usage();
+    clock_t start_time = clock();
+
+    for (int j = 0; j < iter; j++) {
+        for(int i = 0; i < 500; i++) {
+          allocs[i] = gmalloc(8);
+          *allocs[i] = 42;
+        }
+
+        for(int i = 0; i < 500; i++) {
+          gfree(allocs[i]);
+        }
+    }
+
+    long after_free_mem = get_mem_usage();
+    double elapsed_time = (double)(clock() - start_time) / CLOCKS_PER_SEC;
+    printf("============================= \n");
+    printf("2. Result => Time: %f,  Mem usage: %lf MB \n", elapsed_time, (double)(after_free_mem - init_mem) / 1024);
+    printf("============================= \n");
+}
 
 void single_thread_mixed_freeing_bench() {
     printf("============================= \n");
@@ -47,9 +74,9 @@ void single_thread_mixed_freeing_bench() {
 
     for (int i = 0; i < ALLOC_SIZE; i++) {
       allocs[i] = gmalloc(8);
-      memset(allocs[i], 1, 8);
-      if (i > 1000) {
-          gfree(allocs[i-1000]);
+      *allocs[i] = 42;
+      if (i > 500) {
+          gfree(allocs[i-500]);
       }
     }
 
@@ -78,7 +105,7 @@ void single_thread_allatonce_bench() {
       memset(allocs[i], 1, 8);
     }
 
-    for (int i = 0; i < ALLOC_SIZE/2; i++) {
+    for (int i = 0; i < ALLOC_SIZE; i++) {
       gfree(allocs[i]);
     }
 
@@ -91,7 +118,7 @@ void single_thread_allatonce_bench() {
 }
 
 long* allocs_multi_tr[ALLOC_SIZE];
-const int threads_qty = ALLOC_SIZE/10000;
+const int threads_qty = 10;
 
 void* alloc_it(void *args)
 {
@@ -175,24 +202,10 @@ void multi_thread_bench() {
 }
 
 int main() {
-    pid_t child, child2;
-
-    child = fork();
-    if(child == 0 ) {
-        child2 = fork();
-
-        if(child2 == 0) {
-           /* multi_thread_bench(); */
-        } else {
-            single_thread_allatonce_bench();
-
-        }
-    } else {
-        /* single_thread_mixed_freeing_bench(); */
-    }
-
-    waitpid(child, 0, 0);
-    waitpid(child2, 0, 0);
+    /* single_thread_allatonce_bench(); */
+    /* multi_thread_bench(); */
+    /* single_thread_mixed_freeing_bench(); */
+    reusing_freed_bench();
 
     return 0;
 }

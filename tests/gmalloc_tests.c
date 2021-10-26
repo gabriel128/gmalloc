@@ -9,12 +9,15 @@ void test_multiple_allocations(size_t size, size_t addr_diff) {
 
     for(int i = 0; i < 10; i++) {
         mems[i] = gmalloc(size);
+        uintptr_t this_addr = (uintptr_t) mems[i];
+
+        cr_assert_eq(this_addr % 8, 0);
+
         cr_assert_not_null(mems[i]);
         *mems[i] = 1;
 
         if (i > 0) {
             uintptr_t prev_addr = (uintptr_t) mems[i-1];
-            uintptr_t this_addr = (uintptr_t) mems[i];
 
             cr_assert_eq(this_addr, prev_addr+addr_diff+sizeof(MemBlock));
         }
@@ -64,7 +67,7 @@ Test(gmalloc_tests, eight_byte_bucket_malloc_and_free) {
 
     uintptr_t a_addr = (uintptr_t)a;
 
-    cr_expect_eq(*a, 2);
+    cr_assert_eq(*a, 2);
 
     int free_res = gfree(a);
     cr_expect_neq(free_res, -1);
@@ -74,7 +77,7 @@ Test(gmalloc_tests, eight_byte_bucket_malloc_and_free) {
     int* b = gmalloc(sizeof(int));
     uintptr_t b_addr = (uintptr_t)b;
 
-    cr_expect(a_addr == b_addr);
+    cr_assert_eq(a_addr, b_addr);
 
     gfree(b);
 }
@@ -86,8 +89,6 @@ Test(gmalloc_tests, alloc_and_free_multiple1) {
 Test(gmalloc_tests, alloc_and_free_multiple4) {
     GMAllocMetadata *metadata = gmalloc_metadata();
     test_multiple_allocations(4, 8);
-    cr_assert_not_null(metadata->arenas[0]);
-    cr_assert_null(metadata->arenas[1]);
 }
 
 Test(gmalloc_tests, alloc_and_free_multiple8) {
@@ -102,6 +103,7 @@ Test(gmalloc_tests, alloc_and_free_multiple16) {
 Test(gmalloc_tests, alloc_and_free_multiple32) {
     test_multiple_allocations(30, 32);
 }
+
 Test(gmalloc_tests, alloc_and_free_multiple64) {
     test_multiple_allocations(55, 64);
 }
@@ -114,9 +116,27 @@ Test(gmalloc_tests, alloc_and_free_multiple256) {
     test_multiple_allocations(200, 256);
 }
 
-Test(gmalloc_tests, alloc_and_free_multiple512) {
-    /* test_multiple_allocations(200, 512); */
-}
+// TODO
+/* Test(gmalloc_tests, alloc_and_free_multiple512) { */
+/*     int* a = gmalloc(512); */
+/*     *a = 2; */
+
+/*     uintptr_t a_addr = (uintptr_t)a; */
+
+/*     cr_assert_eq(*a, 2); */
+
+/*     int free_res = gfree(a); */
+/*     cr_expect_neq(free_res, -1); */
+
+/*     cr_expect_eq(*a, 2); */
+
+/*     int* b = gmalloc(sizeof(int)); */
+/*     uintptr_t b_addr = (uintptr_t)b; */
+
+/*     cr_assert_eq(a_addr, b_addr); */
+
+/*     gfree(b); */
+/* } */
 
 
 Test(gmalloc_tests, alloc_too_big_is_null) {
@@ -125,41 +145,8 @@ Test(gmalloc_tests, alloc_too_big_is_null) {
 }
 
 
-Test(gmalloc_tests, double_free_returns_minus_one) {
-}
-
-/* Test(gmalloc_tests, crossing_arenas_allocation) { */
-/*   for (int i = 0; i < 100000; i++) { */
-/*     int* a = gmalloc(512); */
-/*     memset(a, 1, 512); */
-/*     printf("a is %d \n", *a); */
-/*   } */
-/*   while (true) { */
-/*   } */
+/* Test(gmalloc_tests, double_free_returns_minus_one) { */
 /* } */
 
-Test(gmalloc_tests, multi_threaded_allocing) {
-}
-
-/* long get_mem_usage() { */
-/*     struct rusage usage; */
-
-/*     getrusage(RUSAGE_SELF, &usage); */
-
-/*     return usage.ru_maxrss; */
+/* Test(gmalloc_tests, multi_threaded_allocing) { */
 /* } */
-
-Test(gmalloc_tests, alloc_length) {
-    char* x = gmalloc(8);
-    GMAllocMetadata* metadata = gmalloc_metadata();
-
-    cr_expect_eq(metadata->arenas[0]->header.len, 1);
-    char* y = gmalloc(8);
-    cr_expect_eq(metadata->arenas[0]->header.len, 2);
-    gfree(x);
-    // It shouldn't change length
-    cr_expect_eq(metadata->arenas[0]->free_stack->len, 1);
-    int i = gfree(y);
-    cr_expect_eq(metadata->arenas[0]->free_stack->len, 2);
-
-}
