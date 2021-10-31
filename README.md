@@ -51,11 +51,11 @@ GSpecialMetadata = [ Arenarray for allocs 24 bytes | ... | Arenarray for bucket 
 
 ### Arenarray (cool name aye!)
 
-As the name suggest an Arenarray consists of an array of arenas for certain bucket. Each arena sizes are defined here: [TODO add link]
+As the name suggest an Arenarray consists of an array of arenas for certain bucket. Each arena sizes are defined here: https://github.com/gabriel128/gmalloc/blob/main/src/arenarray.c#L7
 The idea is that the higher the index, the higher the memory used by the Arena (it's aprox a linear grow of 10x to avoid 
 too many system calls). It also uses a bit of extra memory to keep track of which arenas are full. Mostly for cache efficency 
-when using lots of memory. 
-The original design used Arenas as a linked list (it was also elegant with recursion) and finding a free slots with high memory 
+when using high amounts of memory. 
+The original design used Arenas as a linked list (it was also elegant with recursion) but finding a free slots with high memory 
 usage was slow, mostly because it was using the cache poorly (checked with `perf record -e LLC-load-misses` and the L1 variant). 
 
 It looks like the following
