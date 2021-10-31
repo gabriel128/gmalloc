@@ -66,6 +66,9 @@ Arenarray = [ ArenaItem {full :: bool, arena :: Arena},  ..., ArenaItem {full ::
 
 ### Arena
 
+![Untitled - Frame 1](https://user-images.githubusercontent.com/2847315/139574829-4daa2595-e7cf-4c57-8c49-e3966bf3fef0.jpg)
+
+
 This is the main datastructure were the allocations are stored. It looks like the following:
 
 ```
